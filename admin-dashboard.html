@@ -293,11 +293,17 @@
     let matrixPaymentMap = {};
     let currentTab = 'queue';
 
-    document.addEventListener('DOMContentLoaded', async () => {
+    async function initAdmin() {
       currentAdmin = Auth.requireAuth('admin');
       if (!currentAdmin) return;
       await loadAllAdminData();
-    });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAdmin);
+    } else {
+      initAdmin();
+    }
 
     async function loadAllAdminData() {
       await Promise.all([loadStats(), loadQueue(), loadMatrix()]);
@@ -598,8 +604,7 @@
 
       let csv = 'No,NIM,Nama,Kelas';
       for (let w = 1; w <= CONFIG.TOTAL_WEEKS; w++) csv += `,Minggu_${w}`;
-      csv += ',Total_Lunas_Rp,Tunggakan_Rp
-';
+      csv += ',Total_Lunas_Rp,Tunggakan_Rp\n';
 
       matrixStudents.forEach((s, idx) => {
         const pMap = matrixPaymentMap[s.nim] || {};
@@ -616,8 +621,7 @@
 
         const paidNom = paidCount * CONFIG.WEEKLY_DUES;
         const debtNom = unpaidCount * CONFIG.WEEKLY_DUES;
-        csv += `${idx + 1},"${s.nim}","${s.nama}","${s.kelas}",${rowCols.join(',')},${paidNom},${debtNom}
-`;
+        csv += `${idx + 1},"${s.nim}","${s.nama}","${s.kelas}",${rowCols.join(',')},${paidNom},${debtNom}\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
