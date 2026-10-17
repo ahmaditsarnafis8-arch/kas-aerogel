@@ -263,6 +263,51 @@ const KasDB = {
     });
   },
 
+  // Ambil semua pembayaran berstatus 'Lunas' yang sudah disetujui (untuk Log Histori Admin)
+  async getApprovedPaymentHistory() {
+    const { data: payments, error: pErr } = await db
+      .from('weekly_payments')
+      .select('*')
+      .eq('status', 'Lunas')
+      .order('payment_date', { ascending: false });
+
+    if (pErr) throw pErr;
+    if (!payments || payments.length === 0) return [];
+
+    const nims = [...new Set(payments.map(p => p.nim).filter(Boolean))];
+    const studentMap = {};
+
+    if (nims.length > 0) {
+      try {
+        const { data: students } = await db
+          .from('students')
+          .select('nim, nama, kelas')
+          .in('nim', nims);
+        (students || []).forEach(s => { studentMap[s.nim] = s; });
+      } catch (e) {
+        console.warn('Could not fetch students detail for history:', e);
+      }
+    }
+
+    const proofs = this.getStoredProofs();
+
+    return payments.map(p => {
+      const known = this.KNOWN_STUDENTS[p.nim] || {};
+      const student = studentMap[p.nim] || {
+        nama: known.nama || ('Mahasiswa ' + p.nim),
+        kelas: known.kelas || '-'
+      };
+      const proofInfo = proofs[`${p.nim}_${p.week_number}`] || proofs[p.nim] || null;
+      return {
+        ...p,
+        nama: student.nama,
+        kelas: student.kelas,
+        proof_image: proofInfo ? proofInfo.image : null,
+        proof_note: proofInfo ? proofInfo.note : null
+      };
+    });
+  },
+
   // Mahasiswa submit pembayaran minggu tertentu
   async submitWeeklyPayment(nim, selectedWeeks, paymentDate, proofImage = null, proofNote = '') {
     if (!selectedWeeks || selectedWeeks.length === 0) {
