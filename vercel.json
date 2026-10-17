@@ -1,8 +1,1 @@
-﻿{
-  "cleanUrls": true,
-  "rewrites": [
-    { "source": "/", "destination": "/index.html" },
-    { "source": "/admin", "destination": "/admin-dashboard.html" },
-    { "source": "/student", "destination": "/student-dashboard.html" }
-  ]
-}
+{"cleanUrls": true}

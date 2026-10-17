@@ -365,7 +365,7 @@
 
             <div class="flex items-center gap-2 self-end md:self-center">
               ${hasImage ? `
-                <button onclick="previewProof('${item.nim}', '${item.nama}', ${item.week_number})' class="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+                <button onclick="previewProof('${item.nim}', ${item.week_number})" class="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
                   <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                   <span>Lihat Bukti</span>
                 </button>
@@ -426,25 +426,27 @@
       }
     }
 
-    function previewProof(nim, nama, weekNum) {
+    function previewProof(nim, weekNum) {
+      const item = pendingList.find(p => p.nim === nim && p.week_number === weekNum) || {};
       const proofs = KasDB.getStoredProofs();
-      const p = proofs[`${nim}_${weekNum}`] || proofs[nim];
-      if (!p || !p.image) {
-        Utils.showToast('Bukti gambar tidak ditemukan pada cache lokal.', 'warning');
-        return;
-      }
+      const p = proofs[`${nim}_${weekNum}`] || proofs[nim] || {};
+      
+      const nama = item.nama || p.nama || 'Mahasiswa';
       document.getElementById('modal-proof-title').textContent = `Bukti Transfer: ${nama}`;
-      document.getElementById('modal-proof-sub').textContent = `NIM: ${nim} • Minggu ke-${weekNum} • Tanggal: ${p.date || '-'}`;
-      document.getElementById('modal-proof-img').src = p.image;
+      document.getElementById('modal-proof-sub').textContent = `NIM: ${nim} • Minggu ke-${weekNum} • Tanggal: ${Utils.formatDate(item.payment_date || p.date)}`;
+      
+      if (p.image || item.proof_image) {
+        document.getElementById('modal-proof-img').src = p.image || item.proof_image;
+        document.getElementById('modal-proof-img').classList.remove('hidden');
+      } else {
+        document.getElementById('modal-proof-img').classList.add('hidden');
+      }
       
       const noteBox = document.getElementById('modal-proof-note-container');
       const noteText = document.getElementById('modal-proof-note');
-      if (p.note) {
-        noteBox.classList.remove('hidden');
-        noteText.textContent = p.note;
-      } else {
-        noteBox.classList.add('hidden');
-      }
+      const noteContent = item.proof_note || p.note || 'Tidak ada catatan transfer.';
+      noteBox.classList.remove('hidden');
+      noteText.textContent = noteContent;
 
       document.getElementById('proof-modal').classList.remove('hidden');
       document.getElementById('proof-modal').classList.add('flex');
