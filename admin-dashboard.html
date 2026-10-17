@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Sekretaris | Kas Angkatan Kimia 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'] },
+          colors: { brand: { 50: '#eef2ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .glass-nav { background: rgba(255, 255, 255, 0.88); backdrop-filter: blur(12px); }
+    .sticky-col { position: sticky; left: 0; z-index: 10; }
+  </style>
+</head>
+<body class="min-h-full flex flex-col justify-between text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- NAVBAR -->
+  <header class="glass-nav border-b border-slate-200/80 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-violet-600 flex items-center justify-center text-white shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        </div>
+        <div>
+          <span class="font-bold text-slate-900 tracking-tight text-sm sm:text-base flex items-center gap-2">
+            KAS KIMIA 2026
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-brand-700 border border-brand-200">Panel Sekretaris</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 sm:gap-4">
+        <div class="text-right hidden sm:block">
+          <div class="text-xs font-bold text-slate-900 leading-tight">Sekretaris Angkatan</div>
+          <div class="text-[11px] text-slate-500 flex items-center justify-end gap-1.5 mt-0.5">
+            <span class="font-mono">NIM: 261810309999</span>
+            <span>•</span>
+            <span class="font-semibold text-emerald-600">Admin</span>
+          </div>
+        </div>
+        <button onclick="Auth.logout()" title="Keluar" class="p-2 sm:px-3 sm:py-2 rounded-xl border border-slate-200 hover:border-slate-300 hover:bg-slate-100 text-slate-600 hover:text-slate-900 text-xs font-semibold transition flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+          <span class="hidden sm:inline">Keluar</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+    <!-- ADMIN HERO BANNER -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 w-64 h-64 rounded-full bg-brand-500/20 blur-3xl pointer-events-none"></div>
+      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-brand-200 text-xs font-semibold mb-3">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            Pusat Kendali Kas • Kimia Aerogel 2026
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            Dashboard Sekretaris Angkatan 📊
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
+            Verifikasi transfer QRIS dari mahasiswa, pantau matriks kelunasan 118+ mahasiswa Kelas G, H, dan I, serta kelola pencatatan kas mingguan secara real-time.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3 self-start md:self-center">
+          <button onclick="loadAllAdminData()" class="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span>Segarkan</span>
+          </button>
+          <button onclick="exportMatrixToCSV()" class="px-4 py-2.5 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Export CSV</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS ROW -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <span>Mahasiswa Aktif</span>
+          <span class="p-1.5 rounded-lg bg-indigo-50 text-brand-600 font-bold">🎓</span>
+        </div>
+        <div id="stat-total-students" class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">118</div>
+        <p class="text-xs text-slate-500 mt-0.5">Kelas G, H, dan I</p>
+      </div>
+
+      <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <span>Total Kas Terkumpul</span>
+          <span class="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 font-bold">💰</span>
+        </div>
+        <div id="stat-total-collected" class="text-xl sm:text-2xl font-extrabold text-emerald-600 mt-2">Rp 0</div>
+        <p id="stat-target-percent" class="text-xs text-slate-500 mt-0.5">0% dari target semester</p>
+      </div>
+
+      <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm relative overflow-hidden">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <span>Perlu Verifikasi</span>
+          <span class="p-1.5 rounded-lg bg-amber-50 text-amber-600">⏳</span>
+        </div>
+        <div id="stat-pending-count" class="text-xl sm:text-2xl font-extrabold text-amber-600 mt-2 flex items-center gap-2">
+          <span>0</span>
+          <span id="pending-pulse" class="hidden w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">Menunggu konfirmasi admin</p>
+      </div>
+
+      <div class="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/80 shadow-sm">
+        <div class="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+          <span>Tarif / Periode</span>
+          <span class="p-1.5 rounded-lg bg-slate-100 text-slate-600 font-bold">ℹ</span>
+        </div>
+        <div class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-2">Rp 5.000</div>
+        <p class="text-xs text-slate-500 mt-0.5">16 Minggu per mahasiswa</p>
+      </div>
+    </div>
+
+    <!-- MAIN SECTION WITH TABS -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <!-- TAB NAVIGATION -->
+      <div class="px-6 pt-5 pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-4 bg-slate-50/50">
+        <div class="flex items-center gap-2 p-1 rounded-xl bg-slate-200/70 text-xs font-bold">
+          <button onclick="switchTab('queue')" id="tab-btn-queue" class="px-4 py-2 rounded-lg bg-white text-slate-900 shadow-sm transition flex items-center gap-2">
+            <span>Antrean Verifikasi</span>
+            <span id="badge-queue-count" class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-extrabold">0</span>
+          </button>
+          <button onclick="switchTab('matrix')" id="tab-btn-matrix" class="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+            <span>Matriks Kas Global</span>
+            <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">118 Mhs</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW 1: QUEUE VERIFIKASI -->
+      <div id="view-queue" class="p-5 sm:p-7 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 tracking-tight">Daftar Pengajuan Transfer QRIS</h2>
+            <p class="text-xs text-slate-500">Periksa bukti transfer dan klik verifikasi untuk menyetujui status menjadi Lunas</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="verifyAllPending()" id="btn-verify-all" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition flex items-center gap-1.5">
+              <span>✓ Setujui Semua</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="queue-container" class="space-y-3">
+          <div class="py-16 text-center text-slate-400 text-sm">Memuat antrean verifikasi...</div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: MATRIKS KAS GLOBAL -->
+      <div id="view-matrix" class="p-5 sm:p-7 space-y-4 hidden">
+        <!-- Filters Row -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 tracking-tight">Matriks Pembayaran Kas 16 Minggu</h2>
+            <p class="text-xs text-slate-500">Klik pada kotak status (W1 - W16) untuk mengubah status secara manual (Lunas / Belum Lunas)</p>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Search -->
+            <div class="relative w-full sm:w-56">
+              <input type="text" id="matrix-search" placeholder="Cari Nama / NIM..." oninput="handleMatrixSearch()" class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-300 focus:ring-2 focus:ring-brand-500">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+            </div>
+
+            <!-- Filter Kelas -->
+            <select id="matrix-filter-kelas" onchange="handleMatrixFilter()" class="py-2 px-3 text-xs rounded-xl border border-slate-300 bg-white font-semibold text-slate-700 focus:ring-2 focus:ring-brand-500">
+              <option value="all">Semua Kelas (G, H, I)</option>
+              <option value="G">Kelas G</option>
+              <option value="H">Kelas H</option>
+              <option value="I">Kelas I</option>
+            </select>
+
+            <!-- Filter Status Kelunasan -->
+            <select id="matrix-filter-status" onchange="handleMatrixFilter()" class="py-2 px-3 text-xs rounded-xl border border-slate-300 bg-white font-semibold text-slate-700 focus:ring-2 focus:ring-brand-500">
+              <option value="all">Semua Status</option>
+              <option value="unpaid">Ada Tunggakan</option>
+              <option value="paid">Lunas Penuh (16 Mg)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="flex items-center gap-4 text-xs font-semibold text-slate-600 flex-wrap">
+          <span class="text-slate-400">Petunjuk Status:</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-emerald-500 text-white flex items-center justify-center text-[10px] font-bold">✓</span> Lunas (Rp 5k)</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-amber-400 text-white flex items-center justify-center text-[10px] font-bold">⏳</span> Menunggu Konfirmasi</span>
+          <span class="inline-flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-rose-100 text-rose-500 border border-rose-200 flex items-center justify-center text-[10px] font-bold">✕</span> Belum Lunas</span>
+          <span class="text-slate-400 ml-auto hidden sm:inline text-[11px] font-normal">Tip: Klik cell untuk toggle status</span>
+        </div>
+
+        <!-- Table Container with Horizontal Scroll -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-200/80 shadow-inner max-h-[600px] overflow-y-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-bold tracking-wider uppercase sticky top-0 z-20 border-b border-slate-200">
+              <tr>
+                <th class="p-3 sticky-col bg-slate-100 min-w-[40px] text-center border-r border-slate-200">No</th>
+                <th class="p-3 sticky-col bg-slate-100 min-w-[120px] left-[40px] border-r border-slate-200">NIM</th>
+                <th class="p-3 sticky-col bg-slate-100 min-w-[180px] left-[160px] border-r border-slate-200">Nama Mahasiswa</th>
+                <th class="p-3 text-center min-w-[60px] border-r border-slate-200">Kelas</th>
+                <!-- W1 to W16 -->
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W1</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W2</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W3</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W4</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W5</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W6</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W7</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W8</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W9</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W10</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W11</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W12</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W13</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W14</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W15</th>
+                <th class="p-2 text-center min-w-[38px] border-r border-slate-200">W16</th>
+                <!-- Summary -->
+                <th class="p-3 text-right min-w-[95px] border-r border-slate-200">Lunas</th>
+                <th class="p-3 text-right min-w-[95px]">Tunggakan</th>
+              </tr>
+            </thead>
+            <tbody id="matrix-tbody" class="divide-y divide-slate-100 bg-white">
+              <tr>
+                <td colspan="22" class="p-12 text-center text-slate-400">Memuat matriks kas...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: PREVIEW BUKTI TRANSFER -->
+  <div id="proof-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 id="modal-proof-title" class="text-base font-bold text-slate-900">Bukti Transfer</h3>
+          <p id="modal-proof-sub" class="text-xs text-slate-500"></p>
+        </div>
+        <button onclick="closeProofModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2 text-center">
+        <img id="modal-proof-img" src="" alt="Bukti Transfer" class="max-h-96 mx-auto rounded-xl object-contain">
+      </div>
+      <div id="modal-proof-note-container" class="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-xs text-indigo-900">
+        <strong>Catatan dari Mahasiswa:</strong>
+        <p id="modal-proof-note" class="mt-1 text-slate-700"></p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-slate-200/80 bg-white/60 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p>&copy; 2026 Kimia Aerogel. Dikelola oleh Sekretaris Angkatan Kimia.</p>
+      <div class="flex items-center gap-4 text-slate-600">
+        <span>PostgreSQL & Supabase</span>
+        <span>•</span>
+        <span>Tailwind CSS</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    let currentAdmin = null;
+    let pendingList = [];
+    let matrixStudents = [];
+    let matrixPaymentMap = {};
+    let currentTab = 'queue';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      currentAdmin = Auth.requireAuth('admin');
+      if (!currentAdmin) return;
+      await loadAllAdminData();
+    });
+
+    async function loadAllAdminData() {
+      await Promise.all([loadStats(), loadQueue(), loadMatrix()]);
+    }
+
+    async function loadStats() {
+      try {
+        const stats = await KasDB.getAdminStats();
+        document.getElementById('stat-total-students').textContent = stats.totalStudents;
+        document.getElementById('stat-total-collected').textContent = Utils.formatRupiah(stats.totalCollected);
+        document.getElementById('stat-target-percent').textContent = `${stats.percentage}% dari target ${Utils.formatRupiah(stats.targetTotal)}`;
+        document.getElementById('stat-pending-count').firstElementChild.textContent = stats.pendingCount;
+
+        const pulse = document.getElementById('pending-pulse');
+        if (stats.pendingCount > 0) pulse.classList.remove('hidden');
+        else pulse.classList.add('hidden');
+
+        document.getElementById('badge-queue-count').textContent = stats.pendingCount;
+      } catch (e) {
+        console.error('Error stats:', e);
+      }
+    }
+
+    async function loadQueue() {
+      const container = document.getElementById('queue-container');
+      try {
+        pendingList = await KasDB.getPendingPayments();
+        if (pendingList.length === 0) {
+          container.innerHTML = `
+            <div class="py-16 text-center text-slate-400 space-y-2">
+              <div class="text-3xl">🎉</div>
+              <div class="text-sm font-semibold text-slate-700">Semua Antrean Bersih!</div>
+              <div class="text-xs text-slate-500">Tidak ada bukti transfer yang menunggu verifikasi saat ini.</div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = '';
+        pendingList.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'p-4 rounded-2xl border border-amber-200 bg-amber-50/20 hover:bg-white hover:border-slate-300 transition shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4';
+          
+          const hasImage = !!item.proof_image;
+
+          card.innerHTML = `
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-2xl bg-amber-100 border border-amber-200 flex-shrink-0 flex items-center justify-center text-amber-700 font-extrabold text-sm">
+                W${item.week_number}
+              </div>
+              <div class="space-y-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-slate-900 text-sm">${item.nama || 'Mahasiswa'}</span>
+                  <span class="font-mono text-xs text-slate-500">(${item.nim})</span>
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-brand-700 border border-indigo-200">Kelas ${item.kelas || '-'}</span>
+                </div>
+                <div class="text-xs text-slate-600 flex items-center gap-3 flex-wrap">
+                  <span>Nominal: <strong class="text-slate-900">${Utils.formatRupiah(item.amount)}</strong></span>
+                  <span>•</span>
+                  <span>Tgl Transfer: <strong>${Utils.formatDate(item.payment_date)}</strong></span>
+                </div>
+                ${item.proof_note ? `<div class="text-xs text-slate-500 bg-white/80 px-2.5 py-1 rounded-lg border border-slate-200 inline-block mt-1">Catatan: "${item.proof_note}"</div>` : ''}
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 self-end md:self-center">
+              ${hasImage ? `
+                <button onclick="previewProof('${item.nim}', '${item.nama}', ${item.week_number})' class="px-3 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                  <span>Lihat Bukti</span>
+                </button>
+              ` : `
+                <span class="text-[11px] text-slate-400 italic">Tanpa Foto</span>
+              `}
+              <button onclick="rejectPaymentSingle(${item.id})" class="px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition">
+                Tolak
+              </button>
+              <button onclick="verifyPaymentSingle(${item.id})" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition flex items-center gap-1">
+                <span>✓ Setujui</span>
+              </button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        console.error('Error queue:', e);
+        container.innerHTML = '<div class="py-12 text-center text-rose-500 text-sm">Gagal memuat antrean verifikasi.</div>';
+      }
+    }
+
+    async function verifyPaymentSingle(id) {
+      try {
+        await KasDB.verifyPayment(id);
+        Utils.showToast('Pembayaran berhasil disetujui (Lunas)!', 'success');
+        await loadAllAdminData();
+      } catch (e) {
+        Utils.showToast(e.message || 'Gagal memverifikasi', 'error');
+      }
+    }
+
+    async function rejectPaymentSingle(id) {
+      if (!confirm('Yakin ingin menolak pengajuan pembayaran ini?')) return;
+      try {
+        await KasDB.rejectPayment(id);
+        Utils.showToast('Pengajuan pembayaran ditolak.', 'info');
+        await loadAllAdminData();
+      } catch (e) {
+        Utils.showToast(e.message || 'Gagal menolak', 'error');
+      }
+    }
+
+    async function verifyAllPending() {
+      if (pendingList.length === 0) {
+        Utils.showToast('Tidak ada antrean yang perlu disetujui.', 'info');
+        return;
+      }
+      if (!confirm(`Setujui sekaligus semua ${pendingList.length} pembayaran dalam antrean?`)) return;
+
+      const ids = pendingList.map(p => p.id);
+      try {
+        await KasDB.verifyMultiplePayments(ids);
+        Utils.showToast(`${ids.length} pembayaran berhasil disetujui sekaligus!`, 'success');
+        await loadAllAdminData();
+      } catch (e) {
+        Utils.showToast(e.message || 'Gagal menyetujui massal', 'error');
+      }
+    }
+
+    function previewProof(nim, nama, weekNum) {
+      const proofs = KasDB.getStoredProofs();
+      const p = proofs[`${nim}_${weekNum}`] || proofs[nim];
+      if (!p || !p.image) {
+        Utils.showToast('Bukti gambar tidak ditemukan pada cache lokal.', 'warning');
+        return;
+      }
+      document.getElementById('modal-proof-title').textContent = `Bukti Transfer: ${nama}`;
+      document.getElementById('modal-proof-sub').textContent = `NIM: ${nim} • Minggu ke-${weekNum} • Tanggal: ${p.date || '-'}`;
+      document.getElementById('modal-proof-img').src = p.image;
+      
+      const noteBox = document.getElementById('modal-proof-note-container');
+      const noteText = document.getElementById('modal-proof-note');
+      if (p.note) {
+        noteBox.classList.remove('hidden');
+        noteText.textContent = p.note;
+      } else {
+        noteBox.classList.add('hidden');
+      }
+
+      document.getElementById('proof-modal').classList.remove('hidden');
+      document.getElementById('proof-modal').classList.add('flex');
+    }
+
+    function closeProofModal() {
+      document.getElementById('proof-modal').classList.add('hidden');
+      document.getElementById('proof-modal').classList.remove('flex');
+    }
+
+    async function loadMatrix() {
+      const kelasVal = document.getElementById('matrix-filter-kelas').value;
+      const data = await KasDB.getMatrixData(kelasVal);
+      matrixStudents = data.students;
+      matrixPaymentMap = data.paymentMap;
+      renderMatrix();
+    }
+
+    function renderMatrix() {
+      const tbody = document.getElementById('matrix-tbody');
+      tbody.innerHTML = '';
+
+      const searchVal = (document.getElementById('matrix-search').value || '').toLowerCase().trim();
+      const statusFilter = document.getElementById('matrix-filter-status').value;
+
+      let filtered = matrixStudents.filter(s => {
+        if (searchVal) {
+          const matchName = (s.nama || '').toLowerCase().includes(searchVal);
+          const matchNim = (s.nim || '').toLowerCase().includes(searchVal);
+          if (!matchName && !matchNim) return false;
+        }
+
+        // Status filter check
+        if (statusFilter !== 'all') {
+          const pMap = matrixPaymentMap[s.nim] || {};
+          let paidCount = 0;
+          for (let w = 1; w <= CONFIG.TOTAL_WEEKS; w++) {
+            if (pMap[w] && pMap[w].status === 'Lunas') paidCount++;
+          }
+          if (statusFilter === 'paid' && paidCount < CONFIG.TOTAL_WEEKS) return false;
+          if (statusFilter === 'unpaid' && paidCount === CONFIG.TOTAL_WEEKS) return false;
+        }
+
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="22" class="p-8 text-center text-slate-400 text-xs">Tidak ada data mahasiswa yang sesuai filter.</td></tr>';
+        return;
+      }
+
+      filtered.forEach((s, idx) => {
+        const pMap = matrixPaymentMap[s.nim] || {};
+        let paidCount = 0;
+        let unpaidCount = 0;
+
+        let cellsHtml = '';
+        for (let w = 1; w <= CONFIG.TOTAL_WEEKS; w++) {
+          const p = pMap[w];
+          const st = p ? p.status : 'Belum Lunas';
+          if (st === 'Lunas') paidCount++;
+          else unpaidCount++;
+
+          let pillClass = 'bg-rose-50 text-rose-500 border-rose-200 hover:bg-rose-100';
+          let symbol = '✕';
+          if (st === 'Lunas') {
+            pillClass = 'bg-emerald-500 text-white font-bold hover:bg-emerald-600 shadow-xs';
+            symbol = '✓';
+          } else if (st === 'Menunggu Konfirmasi') {
+            pillClass = 'bg-amber-400 text-white font-bold hover:bg-amber-500 animate-pulse';
+            symbol = '⏳';
+          }
+
+          cellsHtml += `
+            <td class="p-1 text-center border-r border-slate-100">
+              <button 
+                onclick="toggleCell('${s.nim}', ${w}, '${st}')" 
+                title="W${w}: ${st} (Klik untuk ubah)"
+                class="w-7 h-7 rounded-lg text-[10px] font-bold border transition flex items-center justify-center mx-auto active:scale-95 ${pillClass}"
+              >
+                ${symbol}
+              </button>
+            </td>
+          `;
+        }
+
+        const paidAmount = paidCount * CONFIG.WEEKLY_DUES;
+        const debtAmount = unpaidCount * CONFIG.WEEKLY_DUES;
+
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-slate-50 transition border-b border-slate-100';
+        row.innerHTML = `
+          <td class="p-3 sticky-col bg-inherit text-center text-slate-400 font-mono border-r border-slate-200">${idx + 1}</td>
+          <td class="p-3 sticky-col bg-inherit left-[40px] font-mono text-slate-700 font-medium border-r border-slate-200">${s.nim}</td>
+          <td class="p-3 sticky-col bg-inherit left-[160px] font-semibold text-slate-900 border-r border-slate-200">${s.nama || '-'}</td>
+          <td class="p-3 text-center border-r border-slate-200">
+            <span class="px-2 py-0.5 rounded-full font-bold text-[10px] bg-slate-100 text-slate-700">Kelas ${s.kelas}</span>
+          </td>
+          ${cellsHtml}
+          <td class="p-3 text-right font-bold text-emerald-600 border-r border-slate-200">${Utils.formatRupiah(paidAmount)}</td>
+          <td class="p-3 text-right font-bold ${debtAmount > 0 ? 'text-rose-600' : 'text-slate-400'}">${Utils.formatRupiah(debtAmount)}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    async function toggleCell(nim, weekNum, currentStatus) {
+      try {
+        const res = await KasDB.toggleCellStatus(nim, weekNum, currentStatus);
+        Utils.showToast(`${nim} W${weekNum} status: ${res.status}`, 'info');
+        // Update local map
+        if (!matrixPaymentMap[nim]) matrixPaymentMap[nim] = {};
+        matrixPaymentMap[nim][weekNum] = { status: res.status, id: res.id };
+        renderMatrix();
+        await loadStats();
+      } catch (e) {
+        Utils.showToast(e.message || 'Gagal toggle status', 'error');
+      }
+    }
+
+    function handleMatrixSearch() { renderMatrix(); }
+    function handleMatrixFilter() { loadMatrix(); }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      const vQueue = document.getElementById('view-queue');
+      const vMatrix = document.getElementById('view-matrix');
+      const bQueue = document.getElementById('tab-btn-queue');
+      const bMatrix = document.getElementById('tab-btn-matrix');
+
+      if (tab === 'queue') {
+        vQueue.classList.remove('hidden');
+        vMatrix.classList.add('hidden');
+        bQueue.className = 'px-4 py-2 rounded-lg bg-white text-slate-900 shadow-sm transition flex items-center gap-2';
+        bMatrix.className = 'px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-2';
+      } else {
+        vQueue.classList.add('hidden');
+        vMatrix.classList.remove('hidden');
+        bMatrix.className = 'px-4 py-2 rounded-lg bg-white text-slate-900 shadow-sm transition flex items-center gap-2';
+        bQueue.className = 'px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-2';
+      }
+    }
+
+    function exportMatrixToCSV() {
+      if (matrixStudents.length === 0) {
+        Utils.showToast('Data kosong untuk di-export.', 'warning');
+        return;
+      }
+
+      let csv = 'No,NIM,Nama,Kelas';
+      for (let w = 1; w <= CONFIG.TOTAL_WEEKS; w++) csv += `,Minggu_${w}`;
+      csv += ',Total_Lunas_Rp,Tunggakan_Rp
+';
+
+      matrixStudents.forEach((s, idx) => {
+        const pMap = matrixPaymentMap[s.nim] || {};
+        let paidCount = 0;
+        let unpaidCount = 0;
+        let rowCols = [];
+
+        for (let w = 1; w <= CONFIG.TOTAL_WEEKS; w++) {
+          const st = pMap[w] ? pMap[w].status : 'Belum Lunas';
+          if (st === 'Lunas') paidCount++;
+          else unpaidCount++;
+          rowCols.push(st);
+        }
+
+        const paidNom = paidCount * CONFIG.WEEKLY_DUES;
+        const debtNom = unpaidCount * CONFIG.WEEKLY_DUES;
+        csv += `${idx + 1},"${s.nim}","${s.nama}","${s.kelas}",${rowCols.join(',')},${paidNom},${debtNom}
+`;
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Rekap_Kas_Kimia_2026_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      Utils.showToast('File CSV berhasil diunduh!', 'success');
+    }
+  </script>
+</body>
+</html>
