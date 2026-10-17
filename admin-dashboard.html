@@ -306,7 +306,9 @@
     }
 
     async function loadAllAdminData() {
-      await Promise.all([loadStats(), loadQueue(), loadMatrix()]);
+      try { await loadStats(); } catch (e) { console.error('Stats error:', e); }
+      try { await loadQueue(); } catch (e) { console.error('Queue error:', e); }
+      try { await loadMatrix(); } catch (e) { console.error('Matrix error:', e); }
     }
 
     async function loadStats() {

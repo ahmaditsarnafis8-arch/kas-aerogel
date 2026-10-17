@@ -442,8 +442,7 @@ const KasDB = {
 
     const { data: payments, error } = await db
       .from('weekly_payments')
-      .select('*')
-      .in('nim', nims);
+      .select('*');
 
     if (error) throw error;
 
