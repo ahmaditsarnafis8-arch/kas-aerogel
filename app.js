@@ -314,7 +314,19 @@ const KasDB = {
       throw new Error('Pilih minimal 1 minggu yang ingin dibayar.');
     }
 
-    const dateVal = paymentDate || new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const timeStr = [
+      String(now.getHours()).padStart(2, '0'),
+      String(now.getMinutes()).padStart(2, '0'),
+      String(now.getSeconds()).padStart(2, '0')
+    ].join(':');
+
+    let dateVal;
+    if (paymentDate) {
+      dateVal = paymentDate.includes('T') ? paymentDate : `${paymentDate}T${timeStr}`;
+    } else {
+      dateVal = now.toISOString();
+    }
 
     // Simpan proof image & note ke local proof cache agar Sekretaris bisa melihat
     const proofs = this.getStoredProofs();
@@ -324,7 +336,7 @@ const KasDB = {
       date: dateVal,
       image: proofImage,
       note: proofNote,
-      timestamp: new Date().toISOString()
+      timestamp: dateVal
     };
     proofs[nim] = batchProof;
     selectedWeeks.forEach(w => {
@@ -395,7 +407,10 @@ const KasDB = {
   async verifyPayment(paymentId) {
     const { data, error } = await db
       .from('weekly_payments')
-      .update({ status: 'Lunas' })
+      .update({ 
+        status: 'Lunas',
+        payment_date: new Date().toISOString()
+      })
       .eq('id', paymentId)
       .select();
 
@@ -420,7 +435,10 @@ const KasDB = {
     if (!paymentIds || paymentIds.length === 0) return [];
     const { data, error } = await db
       .from('weekly_payments')
-      .update({ status: 'Lunas' })
+      .update({ 
+        status: 'Lunas',
+        payment_date: new Date().toISOString()
+      })
       .in('id', paymentIds)
       .select();
 
@@ -439,7 +457,7 @@ const KasDB = {
       newStatus = 'Lunas';
     }
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString();
 
     // Cek apakah record sudah ada
     const { data: existing } = await db
@@ -564,13 +582,27 @@ const Utils = {
   formatDate(dateStr) {
     if (!dateStr) return '-';
     try {
-      const d = new Date(dateStr);
+      let d;
+      if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        const [y, m, day] = dateStr.split('-').map(Number);
+        d = new Date(y, m - 1, day);
+      } else {
+        d = new Date(dateStr);
+      }
       if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('id-ID', {
+
+      const datePart = d.toLocaleDateString('id-ID', {
+        weekday: 'long',
         day: 'numeric',
         month: 'short',
         year: 'numeric'
       });
+
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+
+      return `${datePart} • ${hours}:${minutes}:${seconds} WIB`;
     } catch (e) {
       return dateStr;
     }
