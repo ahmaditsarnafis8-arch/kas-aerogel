@@ -52,11 +52,11 @@ const Auth = {
     }
     const cleanNim = nim.trim();
 
-    // 1. Bypass instan untuk Admin Sekretaris
+    // 1. Bypass instan untuk Admin Bendahara
     if (cleanNim === CONFIG.ADMIN_NIM) {
       const adminData = {
         nim: CONFIG.ADMIN_NIM,
-        nama: 'Admin Sekretaris Kimia 2026',
+        nama: 'Admin Bendahara Kimia 2026',
         kelas: 'ADMIN',
         role: 'admin'
       };
@@ -217,7 +217,14 @@ const KasDB = {
     const proofs = this.getStoredProofs();
 
     return data.map(p => {
-      const proofInfo = proofs[`${p.nim}_${p.week_number}`] || proofs[p.nim] || null;
+      // Jika statusnya Ditolak, pastikan bukti gambar dibersihkan dari penyimpanan
+      if (p.status === 'Ditolak') {
+        const key = `${p.nim}_${p.week_number}`;
+        if (proofs[key]) {
+          this.removeStoredProof(p.nim, p.week_number);
+        }
+      }
+      const proofInfo = p.status === 'Ditolak' ? null : (proofs[`${p.nim}_${p.week_number}`] || proofs[p.nim] || null);
       return {
         ...p,
         proof_image: proofInfo ? proofInfo.image : null,
@@ -340,7 +347,7 @@ const KasDB = {
       dateVal = now.toISOString();
     }
 
-    // Simpan proof image & note ke local proof cache agar Sekretaris bisa melihat
+    // Simpan proof image & note ke local proof cache agar Bendahara bisa melihat
     const proofs = this.getStoredProofs();
     const batchProof = {
       nim,
@@ -430,8 +437,8 @@ const KasDB = {
     return data;
   },
 
-  // Admin tolak pembayaran per ID (menjadi 'Ditolak')
-  async rejectPayment(paymentId) {
+  // Admin tolak pembayaran per ID (menjadi 'Ditolak' dan bersihkan bukti transfer dari storage)
+  async rejectPayment(paymentId, nim = null, weekNumber = null) {
     const { data, error } = await db
       .from('weekly_payments')
       .update({ status: 'Ditolak' })
@@ -439,6 +446,16 @@ const KasDB = {
       .select();
 
     if (error) throw error;
+
+    const targetNim = nim || (data && data[0] ? data[0].nim : null);
+    const targetWeek = (weekNumber !== null && weekNumber !== undefined)
+      ? weekNumber
+      : (data && data[0] ? data[0].week_number : null);
+
+    if (targetNim) {
+      this.removeStoredProof(targetNim, targetWeek);
+    }
+
     return data;
   },
 
@@ -478,6 +495,10 @@ const KasDB = {
       .eq('nim', nim)
       .eq('week_number', weekNumber)
       .maybeSingle();
+
+    if (newStatus !== 'Lunas') {
+      this.removeStoredProof(nim, weekNumber);
+    }
 
     if (existing) {
       const { data, error } = await db
@@ -573,6 +594,44 @@ const KasDB = {
       localStorage.setItem(CONFIG.PROOF_STORAGE_KEY, JSON.stringify(proofs));
     } catch (e) {
       console.warn('Could not save proof locally (storage full)');
+    }
+  },
+
+  // Hapus bukti transfer gambar dari storage cache saat pembayaran ditolak/dibatalkan
+  removeStoredProof(nim, weekNumber = null) {
+    try {
+      const proofs = this.getStoredProofs();
+      let changed = false;
+
+      if (nim && weekNumber !== null && weekNumber !== undefined) {
+        const key = `${nim}_${weekNumber}`;
+        if (proofs[key]) {
+          delete proofs[key];
+          changed = true;
+        }
+      }
+
+      if (nim && proofs[nim]) {
+        if (weekNumber !== null && weekNumber !== undefined) {
+          if (proofs[nim].weeks && Array.isArray(proofs[nim].weeks)) {
+            proofs[nim].weeks = proofs[nim].weeks.filter(w => String(w) !== String(weekNumber));
+            if (proofs[nim].weeks.length === 0) {
+              delete proofs[nim];
+            }
+          } else {
+            delete proofs[nim];
+          }
+        } else {
+          delete proofs[nim];
+        }
+        changed = true;
+      }
+
+      if (changed) {
+        this.saveStoredProofs(proofs);
+      }
+    } catch (e) {
+      console.warn('Error removing stored proof:', e);
     }
   }
 };

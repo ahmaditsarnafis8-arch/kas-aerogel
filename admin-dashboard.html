@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Sekretaris | Kas Angkatan Kimia 2026</title>
+  <title>Panel Bendahara | Kas Angkatan Kimia 2026</title>
   <link rel="icon" type="image/jpeg" href="logo.jpg">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,14 +36,14 @@
         <div>
           <span class="font-bold text-slate-900 tracking-tight text-sm sm:text-base flex items-center gap-2">
             KAS KIMIA 2026
-            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-brand-700 border border-brand-200">Panel Sekretaris</span>
+            <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-brand-700 border border-brand-200">Panel Bendahara</span>
           </span>
         </div>
       </div>
 
       <div class="flex items-center gap-3 sm:gap-4">
         <div class="text-right hidden sm:block">
-          <div class="text-xs font-bold text-slate-900 leading-tight">Sekretaris Angkatan</div>
+          <div class="text-xs font-bold text-slate-900 leading-tight">Bendahara Angkatan</div>
           <div class="text-[11px] text-slate-500 flex items-center justify-end gap-1.5 mt-0.5">
             <span class="font-mono">NIM: 261810309999</span>
             <span>•</span>
@@ -70,7 +70,7 @@
             Pusat Kendali Kas • Kimia Aerogel 2026
           </div>
           <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Dashboard Sekretaris Angkatan 📊
+            Dashboard Bendahara Angkatan 📊
           </h1>
           <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
             Verifikasi transfer QRIS dari mahasiswa, pantau matriks kelunasan 118+ mahasiswa Kelas G, H, dan I, serta kelola pencatatan kas mingguan secara real-time.
@@ -527,10 +527,11 @@
     }
 
     async function rejectPaymentSingle(id) {
-      if (!confirm('Yakin ingin menolak pengajuan pembayaran ini?')) return;
+      if (!confirm('Yakin ingin menolak pengajuan pembayaran ini? Bukti foto akan dihapus dari sistem.')) return;
       try {
-        await KasDB.rejectPayment(id);
-        Utils.showToast('Pengajuan pembayaran ditolak.', 'info');
+        const item = (pendingList || []).find(p => p.id === id);
+        await KasDB.rejectPayment(id, item ? item.nim : null, item ? item.week_number : null);
+        Utils.showToast('Pengajuan pembayaran ditolak dan bukti foto telah dihapus.', 'info');
         await loadAllAdminData();
       } catch (e) {
         Utils.showToast(e.message || 'Gagal menolak', 'error');
@@ -854,12 +855,12 @@
     }
 
     async function revokePaymentApproval(paymentId, nim, weekNum) {
-      if (!confirm(`Batalkan status lunas pembayaran NIM ${nim} untuk Minggu ke-${weekNum}? Status akan kembali menjadi Belum Lunas.`)) {
+      if (!confirm(`Batalkan status lunas pembayaran NIM ${nim} untuk Minggu ke-${weekNum}? Status akan kembali menjadi Belum Lunas dan bukti foto akan dihapus.`)) {
         return;
       }
       try {
-        await KasDB.rejectPayment(paymentId);
-        Utils.showToast(`Persetujuan pembayaran Minggu ${weekNum} berhasil dibatalkan.`, 'info');
+        await KasDB.rejectPayment(paymentId, nim, weekNum);
+        Utils.showToast(`Persetujuan pembayaran Minggu ${weekNum} berhasil dibatalkan dan bukti foto dihapus.`, 'info');
         await loadAllAdminData();
       } catch (e) {
         Utils.showToast(e.message || 'Gagal membatalkan persetujuan', 'error');

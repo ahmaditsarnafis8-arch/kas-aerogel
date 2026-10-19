@@ -316,9 +316,13 @@
 
         <!-- 5. UPLOAD BUKTI TRANSFER -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">Unggah Bukti Transfer (Screenshot/Foto):</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5 flex items-center justify-between">
+            <span>Unggah Bukti Transfer (Screenshot/Foto)</span>
+            <span class="text-[11px] font-semibold text-rose-500 normal-case">(Maks. 1 MB)</span>
+          </label>
           <div class="space-y-2">
             <input type="file" id="proof-file-input" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100 cursor-pointer">
+            <p class="text-[11px] text-slate-500">Format gambar JPG, PNG, atau WEBP. Ukuran file maksimal 1 MB.</p>
             <div id="proof-preview-container" class="hidden p-2 rounded-xl border border-slate-200 bg-slate-50 text-center">
               <img id="proof-preview-img" src="" alt="Bukti Transfer" class="max-h-40 mx-auto rounded-lg object-contain">
               <button type="button" onclick="clearProofPreview()" class="mt-2 text-xs text-rose-600 font-semibold hover:underline">Hapus Foto</button>
@@ -540,7 +544,7 @@
               </label>
               <button onclick="paySingleWeek(${w})" class="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline">${isRejected ? 'Bayar Ulang' : 'Bayar Ini'}</button>
             ` : isPending ? `
-              <span class="text-[11px] font-medium text-amber-700">Diverifikasi Sekretaris</span>
+              <span class="text-[11px] font-medium text-amber-700">Diverifikasi Bendahara</span>
               <span class="text-xs">⏳</span>
             ` : `
               <span class="text-[11px] font-medium text-emerald-700">Terima Kasih!</span>
@@ -688,7 +692,7 @@
             </span>
           `;
           cardBorder = 'border-slate-200 hover:border-emerald-200';
-          statusDesc = 'Kas telah diverifikasi dan disetujui oleh Sekretaris Angkatan.';
+          statusDesc = 'Kas telah diverifikasi dan disetujui oleh Bendahara Angkatan.';
         } else if (isPending) {
           badgeHtml = `
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
@@ -697,7 +701,7 @@
             </span>
           `;
           cardBorder = 'border-amber-200 bg-amber-50/10 hover:border-amber-300';
-          statusDesc = 'Bukti pembayaran telah diterima dan sedang menunggu persetujuan Sekretaris.';
+          statusDesc = 'Bukti pembayaran telah diterima dan sedang menunggu persetujuan Bendahara.';
         } else {
           badgeHtml = `
             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
@@ -705,7 +709,7 @@
             </span>
           `;
           cardBorder = 'border-rose-200 bg-rose-50/10 hover:border-rose-300';
-          statusDesc = 'Pengajuan ditolak oleh Sekretaris. Silakan bayar ulang dengan bukti transfer yang valid.';
+          statusDesc = 'Pengajuan ditolak oleh Bendahara. Silakan bayar ulang dengan bukti transfer yang valid.';
         }
 
         const formattedTime = Utils.formatDate(item.upload_time || item.payment_date);
@@ -875,6 +879,16 @@
     function handleFileSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
+
+      // Validasi batas ukuran file maksimal 1 MB (1 * 1024 * 1024 bytes)
+      const maxSizeBytes = 1 * 1024 * 1024;
+      if (file.size > maxSizeBytes) {
+        const sizeInMb = (file.size / (1024 * 1024)).toFixed(2);
+        Utils.showToast(`Ukuran file bukti transfer (${sizeInMb} MB) melebihi batas maksimal 1 MB. Silakan unggah foto dengan ukuran lebih kecil.`, 'error');
+        clearProofPreview();
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = function(evt) {
         proofBase64Image = evt.target.result;
@@ -910,7 +924,7 @@
 
       try {
         await KasDB.submitWeeklyPayment(currentUser.nim, weeks, dateVal, proofBase64Image, noteVal);
-        Utils.showToast('Konfirmasi pembayaran berhasil dikirim! Menunggu persetujuan Sekretaris.', 'success');
+        Utils.showToast('Konfirmasi pembayaran berhasil dikirim! Menunggu persetujuan Bendahara.', 'success');
         closePaymentModal();
         selectedWeeksForPayment.clear();
         updateBulkSelectionBar();

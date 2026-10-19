@@ -1,6 +1,6 @@
-﻿# 🧪 Sistem Informasi & Pembayaran Kas Angkatan Kimia 2026 (Aerogel)
+# 🧪 Sistem Informasi & Pembayaran Kas Angkatan Kimia 2026 (Aerogel)
 
-Aplikasi web modern, responsif, dan terintegrasi untuk pengelolaan iuran kas mingguan (Rp 5.000/minggu) mahasiswa Kimia 2026 (Kelas G, H, dan I), dikelola langsung oleh Sekretaris Angkatan.
+Aplikasi web modern, responsif, dan terintegrasi untuk pengelolaan iuran kas mingguan (Rp 5.000/minggu) mahasiswa Kimia 2026 (Kelas G, H, dan I), dikelola langsung oleh Bendahara Angkatan.
 
 ---
 
@@ -8,28 +8,31 @@ Aplikasi web modern, responsif, dan terintegrasi untuk pengelolaan iuran kas min
 
 ### 1. 🔐 Sistem Autentikasi Dual-Role via NIM
 - **Login Mahasiswa**: Masukkan NIM (contoh: `261810301001` s/d `261810301118`) untuk mengakses Dashboard Mahasiswa.
-- **Login Sekretaris (Admin)**: Masukkan NIM `261810309999` untuk mengakses Panel Admin / Sekretaris.
+- **Login Bendahara (Admin)**: Masukkan NIM `261810309999` untuk mengakses Panel Admin / Bendahara Angkatan.
 
 ### 2. 💳 Pembayaran Kas Mandiri via QRIS
 - Dynamic / Static QRIS resmi dengan NMID: `ID1026181030999`.
 - Pilih minggu yang ingin dibayar secara fleksibel (bisa 1 minggu atau banyak minggu sekaligus).
 - Kalkulasi otomatis nominal total (`Jumlah Minggu x Rp 5.000`).
-- Input tanggal transfer dan unggah foto/screenshot bukti transfer serta catatan pengirim.
+- Input tanggal transfer dan unggah foto/screenshot bukti transfer serta catatan pengirim (maksimal 1 MB).
 - Status otomatis masuk ke antrean **"Menunggu Konfirmasi"**.
 
 ### 3. 📊 Dashboard Personal Mahasiswa
 - Rincian kartu per minggu (Minggu 1 s/d Minggu 16).
+- Tab **"Riwayat Pembayaran"** untuk memantau status persetujuan, nominal, dan waktu unggah.
 - Indikator status:
-  - 🟢 **Lunas** (Disetujui oleh Sekretaris)
+  - 🟢 **Lunas** (Disetujui oleh Bendahara)
   - 🟡 **Menunggu Konfirmasi** (Dalam antrean verifikasi)
   - 🔴 **Belum Lunas** (Dapat langsung dipilih untuk dibayar)
+  - ⛔ **Ditolak** (Foto bukti dihapus otomatis, opsi bayar ulang)
 - Progress bar kelunasan semester dan ringkasan total uang terbayar vs sisa tunggakan.
 
-### 4. 👑 Panel Kendali Sekretaris (Admin)
-- **Antrean Verifikasi**: Menampilkan seluruh pengajuan transfer mahasiswa, tinjau bukti transfer/catatan, setujui ("✓ Setujui") menjadi status **Lunas** secara instan, atau tolak ("✕ Tolak"). Fitur "Setujui Semua" untuk verifikasi massal.
+### 4. 👑 Panel Kendali Bendahara (Admin)
+- **Antrean Verifikasi**: Menampilkan seluruh pengajuan transfer mahasiswa, tinjau bukti transfer/catatan, setujui ("✓ Setujui") menjadi status **Lunas** secara instan, atau tolak ("✕ Tolak" yang menghapus gambar bukti transfer untuk menghemat storage). Fitur "Setujui Semua" untuk verifikasi massal.
+- **Log Histori Bayar**: Tab rekapan riwayat pembayaran mahasiswa yang telah disetujui, dikelompokkan rapi per mahasiswa lengkap dengan metrik total terbayar dan ekspor CSV.
 - **Matriks Kas Global (118+ Mahasiswa)**:
   - Tabel grid interaktif dengan sticky column (NIM, Nama, Kelas) dan kolom W1 - W16.
-  - **Interactive 1-Click Toggle**: Sekretaris dapat mengklik kotak mana saja untuk mengubah status secara langsung (misalnya mahasiswa bayar tunai di kelas).
+  - **Interactive 1-Click Toggle**: Bendahara dapat mengklik kotak mana saja untuk mengubah status secara langsung (misalnya mahasiswa bayar tunai di kelas).
   - Filter pencarian nama/NIM, filter per kelas (G, H, I), dan filter status kelunasan.
   - Ekspor seluruh rekapan matriks ke file **CSV / Excel**.
 
@@ -48,8 +51,8 @@ Aplikasi web modern, responsif, dan terintegrasi untuk pengelolaan iuran kas min
 ```
 kas-aerogel/
 ├── index.html              # Halaman Login & Landing Page
-├── student-dashboard.html  # Dashboard Mahasiswa & Modal QRIS
-├── admin-dashboard.html    # Panel Sekretaris & Matriks Global
+├── student-dashboard.html  # Dashboard Mahasiswa, Riwayat Pembayaran & Modal QRIS
+├── admin-dashboard.html    # Panel Bendahara, Log Histori & Matriks Global
 ├── app.js                  # Logika Utama, Supabase Client & DB Service
 ├── vercel.json             # Konfigurasi routing Vercel
 └── README.md               # Dokumentasi Proyek
