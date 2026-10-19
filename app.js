@@ -12,6 +12,7 @@ const CONFIG = {
   TOTAL_WEEKS: 16,
   SESSION_KEY: 'kas_aerogel_user',
   PROOF_STORAGE_KEY: 'kas_aerogel_proofs',
+  EXPENSES_STORAGE_KEY: 'kas_aerogel_expenses',
   STORAGE_BUCKET: 'bukti-transfer',
   TARGET_COMPRESSED_SIZE_BYTES: 500 * 1024,
   GEMINI_API_KEY: (typeof atob === 'function')
@@ -185,6 +186,7 @@ const KasDB = {
       .from('students')
       .select('*')
       .neq('role', 'admin')
+      .neq('role', 'expense')
       .order('kelas', { ascending: true })
       .order('nim', { ascending: true });
 
@@ -204,7 +206,7 @@ const KasDB = {
     // Fallback jika database students belum ada policy SELECT
     try {
       const { data: wp } = await db.from('weekly_payments').select('nim');
-      const uniqueNims = [...new Set((wp || []).map(x => x.nim).filter(Boolean))];
+      const uniqueNims = [...new Set((wp || []).map(x => x.nim).filter(n => n && !n.startsWith('EXP_')))];
       if (uniqueNims.length > 0) {
         return uniqueNims.map(nim => {
           const k = this.KNOWN_STUDENTS[nim] || {};
@@ -670,16 +672,37 @@ const KasDB = {
     return { students, paymentMap };
   },
 
-  // Statistik agregat untuk Admin
+  // Statistik agregat untuk Admin & Mahasiswa
   async getAdminStats() {
-    const [studentsRes, paymentsRes, pendingRes] = await Promise.all([
-      db.from('students').select('*', { count: 'exact', head: true }).neq('role', 'admin'),
-      db.from('weekly_payments').select('amount').eq('status', 'Lunas'),
-      db.from('weekly_payments').select('*', { count: 'exact', head: true }).eq('status', 'Menunggu Konfirmasi')
-    ]);
+    let studentsRes = { count: 0 };
+    let paymentsRes = { data: [] };
+    let pendingRes = { count: 0 };
+    let expensesList = [];
 
-    const totalStudents = studentsRes.count || 0;
+    try {
+      if (db) {
+        const results = await Promise.all([
+          db.from('students').select('*', { count: 'exact', head: true }).not('role', 'in', '("admin","expense")'),
+          db.from('weekly_payments').select('amount').eq('status', 'Lunas'),
+          db.from('weekly_payments').select('*', { count: 'exact', head: true }).eq('status', 'Menunggu Konfirmasi'),
+          this.getExpenses()
+        ]);
+        studentsRes = results[0];
+        paymentsRes = results[1];
+        pendingRes = results[2];
+        expensesList = results[3] || [];
+      } else {
+        expensesList = this.getStoredExpenses();
+      }
+    } catch (e) {
+      console.warn('Error fetching stats:', e);
+      expensesList = this.getStoredExpenses();
+    }
+
+    const totalStudents = studentsRes.count || 118;
     const totalCollected = (paymentsRes.data || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalExpenses = (expensesList || []).reduce((sum, e) => sum + (e.amount || 0), 0);
+    const netBalance = totalCollected - totalExpenses;
     const pendingCount = pendingRes.count || 0;
     const targetTotal = totalStudents * CONFIG.TOTAL_WEEKS * CONFIG.WEEKLY_DUES;
     const percentage = targetTotal > 0 ? ((totalCollected / targetTotal) * 100).toFixed(1) : 0;
@@ -687,10 +710,160 @@ const KasDB = {
     return {
       totalStudents,
       totalCollected,
+      totalIncome: totalCollected,
+      totalExpenses,
+      totalExpense: totalExpenses,
+      netBalance,
       pendingCount,
       targetTotal,
-      percentage
+      percentage,
+      expensesList
     };
+  },
+
+  // ------------------------------------------------------------
+  // MANAJEMEN PENGELUARAN KAS (EXPENSE TRACKER & NET BALANCE)
+  // ------------------------------------------------------------
+  getStoredExpenses() {
+    try {
+      const data = localStorage.getItem(CONFIG.EXPENSES_STORAGE_KEY || 'kas_aerogel_expenses');
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveStoredExpenses(expenses) {
+    try {
+      localStorage.setItem(CONFIG.EXPENSES_STORAGE_KEY || 'kas_aerogel_expenses', JSON.stringify(expenses));
+    } catch (e) {
+      console.warn('Could not save expenses to localStorage:', e);
+    }
+  },
+
+  async getExpenses() {
+    try {
+      if (db) {
+        const { data, error } = await db
+          .from('weekly_payments')
+          .select('id, nim, amount, payment_date, status, students(nama)')
+          .eq('status', 'Pengeluaran')
+          .order('payment_date', { ascending: false });
+
+        if (!error && Array.isArray(data)) {
+          const list = data.map(row => ({
+            id: row.id,
+            nim: row.nim,
+            date: row.payment_date,
+            description: (row.students && row.students.nama) ? row.students.nama : 'Pengeluaran Kas',
+            amount: row.amount || 0
+          }));
+          this.saveStoredExpenses(list);
+          return list;
+        }
+      }
+    } catch (err) {
+      console.warn('[KasAerogel] Error fetching expenses from Supabase:', err);
+    }
+
+    return this.getStoredExpenses();
+  },
+
+  async addExpense(description, amount, dateVal = null) {
+    if (!description || !description.trim()) {
+      throw new Error('Keterangan keperluan pengeluaran harus diisi.');
+    }
+    const cleanAmount = parseInt(amount, 10);
+    if (isNaN(cleanAmount) || cleanAmount <= 0) {
+      throw new Error('Nominal pengeluaran harus berupa angka positif.');
+    }
+
+    const now = new Date();
+    const timeStr = now.toTimeString().split(' ')[0];
+    const cleanDate = dateVal 
+      ? (dateVal.includes('T') ? dateVal : `${dateVal}T${timeStr}`)
+      : now.toISOString();
+
+    const expNim = 'EXP_' + Date.now().toString().slice(-10);
+    const cleanDesc = description.trim();
+
+    try {
+      if (db) {
+        // 1. Simpan detail keterangan ke students
+        const { error: studentErr } = await db.from('students').insert([{
+          nim: expNim,
+          nama: cleanDesc,
+          kelas: 'EXP',
+          role: 'expense'
+        }]);
+
+        if (studentErr) {
+          console.warn('[KasAerogel] Warning inserting expense metadata:', studentErr);
+        }
+
+        // 2. Simpan transaksi pengeluaran ke weekly_payments
+        const { data: payData, error: payErr } = await db.from('weekly_payments').insert([{
+          nim: expNim,
+          week_number: 0,
+          amount: cleanAmount,
+          status: 'Pengeluaran',
+          payment_date: cleanDate
+        }]).select();
+
+        if (payErr) {
+          await db.from('students').delete().eq('nim', expNim);
+          throw payErr;
+        }
+
+        const newId = payData && payData[0] ? payData[0].id : Date.now();
+        const newExpense = {
+          id: newId,
+          nim: expNim,
+          date: cleanDate,
+          description: cleanDesc,
+          amount: cleanAmount
+        };
+
+        const currentLocal = this.getStoredExpenses();
+        currentLocal.unshift(newExpense);
+        this.saveStoredExpenses(currentLocal);
+
+        return newExpense;
+      }
+    } catch (err) {
+      console.error('[KasAerogel] Fatal adding expense to Supabase:', err);
+      // Fallback local persistence if network failure
+      const fallbackExpense = {
+        id: 'loc_' + Date.now(),
+        nim: expNim,
+        date: cleanDate,
+        description: cleanDesc,
+        amount: cleanAmount
+      };
+      const currentLocal = this.getStoredExpenses();
+      currentLocal.unshift(fallbackExpense);
+      this.saveStoredExpenses(currentLocal);
+      return fallbackExpense;
+    }
+  },
+
+  async deleteExpense(id, nim) {
+    try {
+      if (db) {
+        if (id) {
+          await db.from('weekly_payments').delete().eq('id', id);
+        }
+        if (nim) {
+          await db.from('students').delete().eq('nim', nim);
+        }
+      }
+    } catch (e) {
+      console.warn('[KasAerogel] Error deleting expense from DB:', e);
+    }
+
+    const currentLocal = this.getStoredExpenses().filter(e => String(e.id) !== String(id) && e.nim !== nim);
+    this.saveStoredExpenses(currentLocal);
+    return true;
   },
 
   // Helper Proof Storage (client-side persistency)
@@ -1149,10 +1322,14 @@ const GeminiBot = {
       : Utils.formatRupiah(118 * CONFIG.TOTAL_WEEKS * CONFIG.WEEKLY_DUES);
     const angkatanPercentage = adminStats?.percentage || '0';
 
+    const totalIncomeNum = adminStats?.totalCollected || 0;
+    const totalExpenseNum = adminStats?.totalExpenses || 0;
+    const netBalanceNum = adminStats?.netBalance !== undefined ? adminStats.netBalance : (totalIncomeNum - totalExpenseNum);
+
     return `Kamu adalah AeroBot, asisten virtual cerdas & konsultan keuangan resmi untuk Mahasiswa Angkatan Kimia 2026 (Kimia Aerogel).
 Tugas utamamu:
 1. Membantu mahasiswa mengecek status kas pribadi secara akurat (berapa yang sudah dibayar, sisa tunggakan, minggu mana saja yang lunas/belum).
-2. Memberikan informasi perkembangan kas angkatan secara real-time dari database Supabase (total uang terkumpul, target, persentase).
+2. Memberikan informasi perkembangan kas angkatan secara real-time dari database Supabase (total uang terkumpul, pengeluaran terpakai, sisa saldo bersih kas, target, persentase).
 3. Memandu tata cara pembayaran kas mingguan (Rp 5.000 per minggu) melalui QRIS resmi.
 4. Menjawab pertanyaan seputar kas dan angkatan secara ramah, santun, komunikatif, solutif, dan penuh semangat kekeluargaan mahasiswa Kimia.
 
@@ -1175,7 +1352,9 @@ DATA MAHASISWA YANG SEDANG LOGIN (Gunakan data ini untuk menjawab pertanyaan pri
 DATA KAS GLOBAL ANGKATAN KIMIA 2026 (Real-Time dari Supabase):
 - Mahasiswa Aktif: ${totalAngkatanStudents} orang (Kelas G, H, dan I)
 - Iuran Kas: ${Utils.formatRupiah(CONFIG.WEEKLY_DUES)} / minggu (Total ${CONFIG.TOTAL_WEEKS} minggu = Rp 80.000 / semester)
-- Total Kas Terkumpul Saat Ini: ${totalAngkatanCollected} (${angkatanPercentage}% dari target)
+- Total Pemasukan Kas Terkumpul: ${totalAngkatanCollected} (${angkatanPercentage}% dari target)
+- Total Pengeluaran Kas Terpakai: ${Utils.formatRupiah(totalExpenseNum)}
+- Saldo Kas Bersih Tersisa: ${Utils.formatRupiah(netBalanceNum)}
 - Target Kas Semester: ${targetTotalSemester}
 - Pengelola Kas: Bendahara Angkatan Kimia 2026
 
