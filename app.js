@@ -10,7 +10,9 @@ const CONFIG = {
   WEEKLY_DUES: 5000,
   TOTAL_WEEKS: 16,
   SESSION_KEY: 'kas_aerogel_user',
-  PROOF_STORAGE_KEY: 'kas_aerogel_proofs'
+  PROOF_STORAGE_KEY: 'kas_aerogel_proofs',
+  STORAGE_BUCKET: 'bukti-transfer',
+  TARGET_COMPRESSED_SIZE_BYTES: 500 * 1024
 };
 
 // ------------------------------------------------------------
@@ -225,10 +227,11 @@ const KasDB = {
         }
       }
       const proofInfo = p.status === 'Ditolak' ? null : (proofs[`${p.nim}_${p.week_number}`] || proofs[p.nim] || null);
+      const proofImg = p.proof_url || (proofInfo ? (proofInfo.url || proofInfo.image) : null);
       return {
         ...p,
-        proof_image: proofInfo ? proofInfo.image : null,
-        proof_note: proofInfo ? proofInfo.note : null,
+        proof_image: proofImg,
+        proof_note: (proofInfo ? proofInfo.note : null) || p.proof_note || null,
         upload_time: proofInfo ? (proofInfo.timestamp || proofInfo.date) : p.payment_date
       };
     });
@@ -272,12 +275,13 @@ const KasDB = {
         kelas: known.kelas || '-'
       };
       const proofInfo = proofs[`${p.nim}_${p.week_number}`] || proofs[p.nim] || null;
+      const proofImg = p.proof_url || (proofInfo ? (proofInfo.url || proofInfo.image) : null);
       return {
         ...p,
         nama: student.nama,
         kelas: student.kelas,
-        proof_image: proofInfo ? proofInfo.image : null,
-        proof_note: proofInfo ? proofInfo.note : null
+        proof_image: proofImg,
+        proof_note: (proofInfo ? proofInfo.note : null) || p.proof_note || null
       };
     });
   },
@@ -317,18 +321,19 @@ const KasDB = {
         kelas: known.kelas || '-'
       };
       const proofInfo = proofs[`${p.nim}_${p.week_number}`] || proofs[p.nim] || null;
+      const proofImg = p.proof_url || (proofInfo ? (proofInfo.url || proofInfo.image) : null);
       return {
         ...p,
         nama: student.nama,
         kelas: student.kelas,
-        proof_image: proofInfo ? proofInfo.image : null,
-        proof_note: proofInfo ? proofInfo.note : null
+        proof_image: proofImg,
+        proof_note: (proofInfo ? proofInfo.note : null) || p.proof_note || null
       };
     });
   },
 
   // Mahasiswa submit pembayaran minggu tertentu
-  async submitWeeklyPayment(nim, selectedWeeks, paymentDate, proofImage = null, proofNote = '') {
+  async submitWeeklyPayment(nim, selectedWeeks, paymentDate, proofImage = null, proofNote = '', proofBlob = null) {
     if (!selectedWeeks || selectedWeeks.length === 0) {
       throw new Error('Pilih minimal 1 minggu yang ingin dibayar.');
     }
@@ -347,13 +352,37 @@ const KasDB = {
       dateVal = now.toISOString();
     }
 
-    // Simpan proof image & note ke local proof cache agar Bendahara bisa melihat
+    let publicProofUrl = null;
+    let storageFilePath = null;
+
+    // 1. Ekstrak blob dan dataUrl
+    const targetBlob = proofBlob || (proofImage && typeof proofImage === 'object' && proofImage.blob ? proofImage.blob : null);
+    const targetDataUrl = (proofImage && typeof proofImage === 'object' && proofImage.dataUrl ? proofImage.dataUrl : (typeof proofImage === 'string' ? proofImage : null));
+
+    // 2. Unggah gambar terkompresi ke Supabase Storage (jika ada file blob)
+    if (targetBlob) {
+      try {
+        const uploadResult = await this.uploadProofToStorage(nim, selectedWeeks, targetBlob);
+        if (uploadResult && uploadResult.url) {
+          publicProofUrl = uploadResult.url;
+          storageFilePath = uploadResult.path;
+          console.log('[KasAerogel] Bukti berhasil diunggah ke Supabase Storage:', publicProofUrl);
+        }
+      } catch (uploadErr) {
+        console.warn('[KasAerogel] Storage upload fallback to local cache:', uploadErr);
+      }
+    }
+
+    // 3. Simpan tautan (URL) dan fallback data ke local proof cache
+    const finalProofImage = publicProofUrl || targetDataUrl || null;
     const proofs = this.getStoredProofs();
     const batchProof = {
       nim,
       weeks: selectedWeeks,
       date: dateVal,
-      image: proofImage,
+      image: finalProofImage,
+      url: publicProofUrl,
+      storage_path: storageFilePath,
       note: proofNote,
       timestamp: dateVal
     };
@@ -363,7 +392,7 @@ const KasDB = {
     });
     this.saveStoredProofs(proofs);
 
-    // Update / Insert di Supabase weekly_payments
+    // 4. Update / Insert di Supabase weekly_payments
     // Cek record eksisting terlebih dahulu untuk masing-masing minggu
     const { data: existing, error: eErr } = await db
       .from('weekly_payments')
@@ -385,7 +414,8 @@ const KasDB = {
           id: existingMap[w].id,
           status: 'Menunggu Konfirmasi',
           amount: CONFIG.WEEKLY_DUES,
-          payment_date: dateVal
+          payment_date: dateVal,
+          proof_url: publicProofUrl
         });
       } else {
         toInsert.push({
@@ -393,33 +423,63 @@ const KasDB = {
           week_number: w,
           amount: CONFIG.WEEKLY_DUES,
           status: 'Menunggu Konfirmasi',
-          payment_date: dateVal
+          payment_date: dateVal,
+          proof_url: publicProofUrl
         });
       }
     });
 
     // Jalankan updates
     for (const item of toUpdate) {
-      const { error } = await db
+      let updatePayload = {
+        status: item.status,
+        amount: item.amount,
+        payment_date: item.payment_date
+      };
+      if (item.proof_url) updatePayload.proof_url = item.proof_url;
+
+      let { error } = await db
         .from('weekly_payments')
-        .update({
-          status: item.status,
-          amount: item.amount,
-          payment_date: item.payment_date
-        })
+        .update(updatePayload)
         .eq('id', item.id);
+
+      // Fallback jika column proof_url belum ada di Supabase
+      if (error && (error.code === '42703' || String(error.message).includes('proof_url'))) {
+        delete updatePayload.proof_url;
+        const res = await db.from('weekly_payments').update(updatePayload).eq('id', item.id);
+        error = res.error;
+      }
       if (error) console.error('Error updating payment', item.id, error);
     }
 
     // Jalankan inserts
     if (toInsert.length > 0) {
-      const { error } = await db
+      let insertRows = toInsert.map(r => {
+        const row = {
+          nim: r.nim,
+          week_number: r.week_number,
+          amount: r.amount,
+          status: r.status,
+          payment_date: r.payment_date
+        };
+        if (r.proof_url) row.proof_url = r.proof_url;
+        return row;
+      });
+
+      let { error } = await db
         .from('weekly_payments')
-        .insert(toInsert);
+        .insert(insertRows);
+
+      // Fallback jika column proof_url belum ada di Supabase
+      if (error && (error.code === '42703' || String(error.message).includes('proof_url'))) {
+        const cleanRows = insertRows.map(({ proof_url, ...rest }) => rest);
+        const res = await db.from('weekly_payments').insert(cleanRows);
+        error = res.error;
+      }
       if (error) throw error;
     }
 
-    return { success: true, count: selectedWeeks.length };
+    return { success: true, count: selectedWeeks.length, publicUrl: publicProofUrl };
   },
 
   // Admin verifikasi pembayaran per ID (menjadi 'Lunas')
@@ -437,13 +497,28 @@ const KasDB = {
     return data;
   },
 
-  // Admin tolak pembayaran per ID (menjadi 'Ditolak' dan bersihkan bukti transfer dari storage)
+  // Admin tolak pembayaran per ID (menjadi 'Ditolak' dan bersihkan bukti transfer dari storage & database)
   async rejectPayment(paymentId, nim = null, weekNumber = null) {
-    const { data, error } = await db
+    let updatePayload = { status: 'Ditolak' };
+    updatePayload.proof_url = null;
+
+    let { data, error } = await db
       .from('weekly_payments')
-      .update({ status: 'Ditolak' })
+      .update(updatePayload)
       .eq('id', paymentId)
       .select();
+
+    // Fallback jika column proof_url belum ada di Supabase
+    if (error && (error.code === '42703' || String(error.message).includes('proof_url'))) {
+      delete updatePayload.proof_url;
+      const res = await db
+        .from('weekly_payments')
+        .update(updatePayload)
+        .eq('id', paymentId)
+        .select();
+      data = res.data;
+      error = res.error;
+    }
 
     if (error) throw error;
 
@@ -453,6 +528,9 @@ const KasDB = {
       : (data && data[0] ? data[0].week_number : null);
 
     if (targetNim) {
+      // Hapus dari Supabase Storage jika ada file tersimpan
+      await this.removeStorageProof(targetNim, targetWeek);
+      // Hapus dari local storage cache
       this.removeStoredProof(targetNim, targetWeek);
     }
 
@@ -633,6 +711,158 @@ const KasDB = {
     } catch (e) {
       console.warn('Error removing stored proof:', e);
     }
+  },
+
+  // Unggah gambar bukti terkompresi ke Supabase Storage bucket
+  async uploadProofToStorage(nim, weekNumbers, imageBlob) {
+    if (!imageBlob || !db) return null;
+    try {
+      const weekTag = Array.isArray(weekNumbers) ? weekNumbers.join('_') : weekNumbers;
+      const fileName = `${nim}/bukti_w${weekTag}_${Date.now()}.jpg`;
+      const bucket = CONFIG.STORAGE_BUCKET || 'bukti-transfer';
+
+      const { data, error } = await db.storage
+        .from(bucket)
+        .upload(fileName, imageBlob, {
+          contentType: 'image/jpeg',
+          upsert: true
+        });
+
+      if (error) {
+        console.warn(`[KasAerogel] Storage upload info: bucket '${bucket}' belum dibuat atau RLS aktif:`, error.message);
+        return null;
+      }
+
+      const { data: urlData } = db.storage
+        .from(bucket)
+        .getPublicUrl(fileName);
+
+      const publicUrl = urlData ? urlData.publicUrl : null;
+      return {
+        path: fileName,
+        url: publicUrl
+      };
+    } catch (e) {
+      console.warn('[KasAerogel] Exception upload ke Supabase Storage:', e);
+      return null;
+    }
+  },
+
+  // Hapus bukti dari Supabase Storage bucket
+  async removeStorageProof(nim, weekNumber = null) {
+    if (!db) return;
+    try {
+      const proofs = this.getStoredProofs();
+      const key = (weekNumber !== null && weekNumber !== undefined) ? `${nim}_${weekNumber}` : nim;
+      const proof = proofs[key] || proofs[nim];
+      if (proof && proof.storage_path) {
+        const bucket = CONFIG.STORAGE_BUCKET || 'bukti-transfer';
+        await db.storage.from(bucket).remove([proof.storage_path]);
+        console.log('[KasAerogel] File bukti berhasil dihapus dari Supabase Storage:', proof.storage_path);
+      }
+    } catch (e) {
+      console.warn('[KasAerogel] Exception saat menghapus bukti dari storage:', e);
+    }
+  }
+};
+
+// ------------------------------------------------------------
+// AUTO IMAGE COMPRESSOR (Client-side HTML5 Canvas)
+// ------------------------------------------------------------
+const ImageCompressor = {
+  /**
+   * Mengompresi file gambar screenshot/foto bukti transfer secara otomatis:
+   * - Menjaga keterbacaan teks (nominal, tanggal, no transaksi, nama bank)
+   * - Menyesuaikan resolusi maksimum (default 1280px)
+   * - Menjamin ukuran file di bawah 500 KB (target 100-350 KB)
+   * - Menghasilkan Blob (untuk upload ke Supabase Storage) & DataURL (untuk preview & fallback)
+   */
+  async compress(file, maxTargetBytes = 500 * 1024, maxDimension = 1280) {
+    if (!file || !file.type.startsWith('image/')) {
+      throw new Error('Berkas yang dipilih bukan gambar yang valid (JPG, PNG, atau WEBP).');
+    }
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Gagal membaca berkas gambar.'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Format gambar tidak didukung atau file rusak.'));
+        img.onload = async () => {
+          try {
+            let { width, height } = img;
+
+            // 1. Skala resolusi secara proporsional agar teks bukti transfer tetap tajam
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+
+            // Optimasi rendering teks agar tidak blur
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            // Background putih bersih untuk menghindari artifact hitam/transparan (terutama PNG)
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // 2. Iterasi kualitas JPEG untuk memastikan ukuran file di bawah 500 KB
+            const qualities = [0.85, 0.78, 0.70, 0.62, 0.55];
+            let bestBlob = null;
+            let bestDataUrl = null;
+
+            for (const quality of qualities) {
+              const dataUrl = canvas.toDataURL('image/jpeg', quality);
+              const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', quality));
+
+              bestBlob = blob;
+              bestDataUrl = dataUrl;
+
+              // Jika ukuran sudah di bawah batas (500 KB), simpan dan hentikan iterasi
+              if (blob && blob.size <= maxTargetBytes) {
+                break;
+              }
+            }
+
+            if (!bestBlob) {
+              throw new Error('Gagal memproses kompresi gambar.');
+            }
+
+            const originalSize = file.size;
+            const compressedSize = bestBlob.size;
+            const savedBytes = Math.max(0, originalSize - compressedSize);
+            const ratioPercent = originalSize > 0 ? Math.round((savedBytes / originalSize) * 100) : 0;
+
+            resolve({
+              blob: bestBlob,
+              dataUrl: bestDataUrl,
+              originalSize,
+              compressedSize,
+              originalSizeFormatted: Utils.formatFileSize(originalSize),
+              compressedSizeFormatted: Utils.formatFileSize(compressedSize),
+              ratioPercent,
+              width,
+              height
+            });
+          } catch (err) {
+            reject(err);
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
   }
 };
 
@@ -640,6 +870,14 @@ const KasDB = {
 // UTILITY HELPERS
 // ------------------------------------------------------------
 const Utils = {
+  formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  },
+
   formatRupiah(amount) {
     if (amount === undefined || amount === null) return 'Rp 0';
     return new Intl.NumberFormat('id-ID', {
@@ -833,3 +1071,4 @@ window.CONFIG = CONFIG;
 window.Auth = Auth;
 window.KasDB = KasDB;
 window.Utils = Utils;
+window.ImageCompressor = ImageCompressor;

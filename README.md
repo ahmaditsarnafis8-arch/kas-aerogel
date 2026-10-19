@@ -10,11 +10,13 @@ Aplikasi web modern, responsif, dan terintegrasi untuk pengelolaan iuran kas min
 - **Login Mahasiswa**: Masukkan NIM (contoh: `261810301001` s/d `261810301118`) untuk mengakses Dashboard Mahasiswa.
 - **Login Bendahara (Admin)**: Masukkan NIM `261810309999` untuk mengakses Panel Admin / Bendahara Angkatan.
 
-### 2. 💳 Pembayaran Kas Mandiri via QRIS
+### 2. 💳 Pembayaran Kas Mandiri via QRIS & Auto Kompres Gambar
 - Dynamic / Static QRIS resmi dengan NMID: `ID1026181030999`.
 - Pilih minggu yang ingin dibayar secara fleksibel (bisa 1 minggu atau banyak minggu sekaligus).
 - Kalkulasi otomatis nominal total (`Jumlah Minggu x Rp 5.000`).
-- Input tanggal transfer dan unggah foto/screenshot bukti transfer serta catatan pengirim (maksimal 1 MB).
+- **Auto Image Compression**: Sistem otomatis mengecilkan resolusi dan mengompresi gambar di bawah **500 KB** di browser tanpa merusak ketajaman teks bukti transfer.
+- **Supabase Storage Integration**: File terkompresi dikirim ke Supabase Storage (`bukti-transfer`), dan URL publik disimpan di database agar efisien dan hemat kapasitas.
+- Input tanggal transfer dan catatan pengirim opsional.
 - Status otomatis masuk ke antrean **"Menunggu Konfirmasi"**.
 
 ### 3. 📊 Dashboard Personal Mahasiswa
@@ -24,11 +26,11 @@ Aplikasi web modern, responsif, dan terintegrasi untuk pengelolaan iuran kas min
   - 🟢 **Lunas** (Disetujui oleh Bendahara)
   - 🟡 **Menunggu Konfirmasi** (Dalam antrean verifikasi)
   - 🔴 **Belum Lunas** (Dapat langsung dipilih untuk dibayar)
-  - ⛔ **Ditolak** (Foto bukti dihapus otomatis, opsi bayar ulang)
+  - ⛔ **Ditolak** (Foto bukti dihapus otomatis dari storage, opsi bayar ulang)
 - Progress bar kelunasan semester dan ringkasan total uang terbayar vs sisa tunggakan.
 
 ### 4. 👑 Panel Kendali Bendahara (Admin)
-- **Antrean Verifikasi**: Menampilkan seluruh pengajuan transfer mahasiswa, tinjau bukti transfer/catatan, setujui ("✓ Setujui") menjadi status **Lunas** secara instan, atau tolak ("✕ Tolak" yang menghapus gambar bukti transfer untuk menghemat storage). Fitur "Setujui Semua" untuk verifikasi massal.
+- **Antrean Verifikasi**: Menampilkan seluruh pengajuan transfer mahasiswa, tinjau bukti transfer/catatan, setujui ("✓ Setujui") menjadi status **Lunas** secara instan, atau tolak ("✕ Tolak" yang menghapus file gambar bukti transfer dari Supabase Storage & database untuk menghemat storage). Fitur "Setujui Semua" untuk verifikasi massal.
 - **Log Histori Bayar**: Tab rekapan riwayat pembayaran mahasiswa yang telah disetujui, dikelompokkan rapi per mahasiswa lengkap dengan metrik total terbayar dan ekspor CSV.
 - **Matriks Kas Global (118+ Mahasiswa)**:
   - Tabel grid interaktif dengan sticky column (NIM, Nama, Kelas) dan kolom W1 - W16.
@@ -40,8 +42,8 @@ Aplikasi web modern, responsif, dan terintegrasi untuk pengelolaan iuran kas min
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: HTML5, Vanilla JavaScript (ES6+), Tailwind CSS (CDN), Plus Jakarta Sans & Inter font.
-- **Backend & Database**: Supabase (PostgreSQL `students` & `weekly_payments` tables).
+- **Frontend**: HTML5, Vanilla JavaScript (ES6+), HTML5 Canvas Image Compression, Tailwind CSS (CDN), Plus Jakarta Sans & Inter font.
+- **Backend & Database**: Supabase (PostgreSQL tables `students` & `weekly_payments`, Supabase Storage `bukti-transfer`).
 - **Deployment**: Vercel & GitHub.
 
 ---
@@ -51,9 +53,10 @@ Aplikasi web modern, responsif, dan terintegrasi untuk pengelolaan iuran kas min
 ```
 kas-aerogel/
 ├── index.html              # Halaman Login & Landing Page
-├── student-dashboard.html  # Dashboard Mahasiswa, Riwayat Pembayaran & Modal QRIS
+├── student-dashboard.html  # Dashboard Mahasiswa, Riwayat Pembayaran & Modal QRIS (Auto Kompres)
 ├── admin-dashboard.html    # Panel Bendahara, Log Histori & Matriks Global
-├── app.js                  # Logika Utama, Supabase Client & DB Service
+├── app.js                  # Logika Utama, Client Supabase, DB Service & ImageCompressor
+├── supabase_setup.sql      # Script SQL untuk Setup Bucket Storage & Kolom proof_url
 ├── vercel.json             # Konfigurasi routing Vercel
 └── README.md               # Dokumentasi Proyek
 ```
