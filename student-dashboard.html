@@ -404,6 +404,114 @@
     </div>
   </div>
 
+  <!-- ========================================== -->
+  <!-- AI SMART FAQ BOT: AERO-BOT (GEMINI API)    -->
+  <!-- ========================================== -->
+  <!-- Floating Action Button (FAB) -->
+  <div id="aerobot-fab-container" class="fixed bottom-6 right-6 z-40">
+    <button id="aerobot-toggle-btn" onclick="toggleAeroBotChat()"
+      class="group relative flex items-center gap-3 px-4 py-3.5 rounded-full bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 text-white shadow-xl shadow-brand-500/30 hover:shadow-2xl hover:shadow-brand-500/50 hover:scale-105 active:scale-95 transition-all duration-200 border border-white/20"
+      title="Tanya AeroBot AI Kas Angkatan">
+      <!-- Glow effect -->
+      <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+      </span>
+      <!-- Robot / AI Icon -->
+      <div class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+        <svg class="w-4 h-4 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div class="text-left hidden sm:block">
+        <div class="text-xs font-extrabold tracking-wide flex items-center gap-1.5 leading-none">
+          <span>AeroBot AI</span>
+          <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-white/25 text-white uppercase font-bold tracking-wider">Gemini</span>
+        </div>
+        <div class="text-[10px] text-white/80 font-medium leading-none mt-1">Asisten Kas Angkatan</div>
+      </div>
+    </button>
+  </div>
+
+  <!-- Chat Drawer / Window -->
+  <div id="aerobot-chat-window" class="fixed bottom-24 right-4 sm:right-6 w-[calc(100vw-2rem)] sm:w-[410px] h-[550px] max-h-[82vh] bg-white rounded-3xl shadow-2xl border border-slate-200/90 z-50 flex flex-col overflow-hidden hidden transition-all duration-200">
+    <!-- Header -->
+    <div class="px-5 py-4 bg-gradient-to-r from-slate-900 via-brand-900 to-indigo-950 text-white flex items-center justify-between shadow-md relative overflow-hidden">
+      <!-- Decorative background blur -->
+      <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-brand-500/20 blur-xl pointer-events-none"></div>
+
+      <div class="flex items-center gap-3 relative z-10">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-500 to-purple-500 p-0.5 shadow-md flex-shrink-0">
+          <div class="w-full h-full bg-slate-900 rounded-[14px] flex items-center justify-center text-lg">
+            🤖
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="font-extrabold text-sm text-white tracking-tight">AeroBot AI</h3>
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              Online
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-300">Asisten Keuangan Kimia Aerogel 2026</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-1 relative z-10">
+        <button onclick="resetAeroBotChat()" title="Mulai Percakapan Baru" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition text-xs">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        </button>
+        <button onclick="toggleAeroBotChat()" title="Tutup Chat" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition text-sm font-bold">
+          ✕
+        </button>
+      </div>
+    </div>
+
+    <!-- Live Context Badge -->
+    <div id="aerobot-context-bar" class="px-4 py-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
+      <div class="flex items-center gap-1.5 truncate">
+        <span class="w-2 h-2 rounded-full bg-brand-500"></span>
+        <span class="font-medium truncate" id="aerobot-user-badge">Menghubungkan data kas...</span>
+      </div>
+      <span class="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100 flex-shrink-0">
+        Gemini 3.5
+      </span>
+    </div>
+
+    <!-- Messages Container -->
+    <div id="aerobot-messages" class="flex-1 p-4 overflow-y-auto space-y-3 text-xs bg-slate-50/50">
+      <!-- Injected dynamically via JS -->
+    </div>
+
+    <!-- Quick Prompts Chips Area -->
+    <div id="aerobot-quick-chips" class="px-3 py-2 bg-white border-t border-slate-100 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+      <button type="button" onclick="sendQuickPrompt('Berapa total tunggakan kas saya?')" class="flex-shrink-0 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 text-[11px] font-medium transition">
+        📌 Tunggakan Saya?
+      </button>
+      <button type="button" onclick="sendQuickPrompt('Berapa total kas angkatan sekarang?')" class="flex-shrink-0 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 text-[11px] font-medium transition">
+        💰 Total Kas Angkatan?
+      </button>
+      <button type="button" onclick="sendQuickPrompt('Bagaimana cara bayar kas via QRIS?')" class="flex-shrink-0 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 text-[11px] font-medium transition">
+        💳 Cara Bayar QRIS?
+      </button>
+      <button type="button" onclick="sendQuickPrompt('Minggu berapa saja yang belum lunas?')" class="flex-shrink-0 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 border border-slate-200 text-[11px] font-medium transition">
+        📅 Minggu Belum Lunas?
+      </button>
+    </div>
+
+    <!-- Input Footer -->
+    <form id="aerobot-form" onsubmit="handleAeroBotSubmit(event)" class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
+      <input type="text" id="aerobot-input" placeholder="Tanya apa saja seputar kas..."
+        class="flex-1 px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white text-slate-900 placeholder:text-slate-400"
+        autocomplete="off" />
+      <button type="submit" id="aerobot-send-btn"
+        class="w-9 h-9 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white flex items-center justify-center shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition flex-shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+      </button>
+    </form>
+  </div>
+
   <footer class="border-t border-slate-200/80 bg-white/60 py-6 text-center text-xs text-slate-500">
     <div class="max-w-6xl mx-auto px-4 flex items-center justify-center">
       <p>&copy; Made by Itsar. Dikelola oleh Inti Angkatan Kimia 2026.</p>
@@ -414,6 +522,7 @@
   <script>
     let currentUser = null;
     let studentPayments = [];
+    let currentAdminStats = null;
     let currentFilter = 'all';
     let currentStudentTab = 'weeks';
     let historyFilter = 'all';
@@ -434,6 +543,7 @@
       document.getElementById('payment-date-input').value = new Date().toISOString().split('T')[0];
       document.getElementById('proof-file-input').addEventListener('change', handleFileSelect);
 
+      initAeroBot();
       await loadStudentData();
     }
 
@@ -446,6 +556,12 @@
     async function loadStudentData() {
       try {
         studentPayments = await KasDB.getStudentPayments(currentUser.nim);
+        try {
+          currentAdminStats = await KasDB.getAdminStats();
+        } catch (e) {
+          console.warn('Tidak dapat memuat statistik global kas untuk bot:', e);
+        }
+        updateAeroBotContextBadge();
         renderStats();
         renderWeeks();
         renderHistory();
@@ -1051,6 +1167,256 @@
         btn.disabled = false;
         btnSpinner.classList.add('hidden');
         btnText.textContent = 'Kirim Konfirmasi';
+      }
+    }
+
+    // ==========================================
+    // AERO-BOT (GEMINI AI ASSISTANT) CONTROLLER
+    // ==========================================
+    let aerobotChatHistory = [];
+    let isAeroBotOpen = false;
+    let isAeroBotThinking = false;
+
+    function toggleAeroBotChat() {
+      const windowEl = document.getElementById('aerobot-chat-window');
+      if (!windowEl) return;
+      isAeroBotOpen = !isAeroBotOpen;
+      if (isAeroBotOpen) {
+        windowEl.classList.remove('hidden');
+        windowEl.classList.add('flex');
+        updateAeroBotContextBadge();
+        setTimeout(() => {
+          const inputEl = document.getElementById('aerobot-input');
+          if (inputEl) inputEl.focus();
+          scrollAeroBotToBottom();
+        }, 100);
+      } else {
+        windowEl.classList.add('hidden');
+        windowEl.classList.remove('flex');
+      }
+    }
+
+    function updateAeroBotContextBadge() {
+      const badgeEl = document.getElementById('aerobot-user-badge');
+      if (!badgeEl) return;
+      if (!currentUser) {
+        badgeEl.textContent = 'Mode Tamu';
+        return;
+      }
+      const firstName = currentUser.nama ? currentUser.nama.split(' ')[0] : 'Mahasiswa';
+      let paidWeeks = 0;
+      if (studentPayments && studentPayments.length) {
+        paidWeeks = studentPayments.filter(p => p.status === 'Lunas').length;
+      }
+      const totalPaid = paidWeeks * (CONFIG.WEEKLY_DUES || 5000);
+      badgeEl.textContent = `${firstName} (${currentUser.nim}) • Kas: ${Utils.formatRupiah(totalPaid)}`;
+    }
+
+    function initAeroBot() {
+      resetAeroBotChat();
+    }
+
+    function resetAeroBotChat() {
+      aerobotChatHistory = [];
+      const container = document.getElementById('aerobot-messages');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const firstName = currentUser && currentUser.nama ? currentUser.nama.split(' ')[0] : 'Kawan';
+
+      const welcomeHtml = `
+        Halo <strong>${firstName}</strong>! 👋 Saya <strong>AeroBot</strong>, asisten keuangan kas virtual Kimia Aerogel 2026.
+        <br><br>
+        Kamu bisa tanyakan hal seperti:
+        <ul class="list-disc ml-4 mt-1.5 space-y-1">
+          <li>Status tunggakan dan riwayat kas pribadimu</li>
+          <li>Total kas angkatan terkini dari database</li>
+          <li>Panduan pembayaran kas mingguan via QRIS</li>
+        </ul>
+        <div class="mt-2.5 text-indigo-700 font-semibold text-[11px]">Ada yang ingin kamu tanyakan hari ini? 🧪✨</div>
+      `;
+      appendAeroBotMessage('bot', welcomeHtml, false);
+    }
+
+    function appendAeroBotMessage(sender, content, format = true) {
+      const container = document.getElementById('aerobot-messages');
+      if (!container) return;
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in duration-150`;
+
+      const formattedContent = format ? formatBotMarkdown(content) : content;
+
+      if (sender === 'user') {
+        msgDiv.innerHTML = `
+          <div class="max-w-[85%] bg-gradient-to-r from-brand-600 to-indigo-600 text-white rounded-2xl rounded-br-none px-3.5 py-2.5 shadow-sm text-xs leading-relaxed break-words">
+            ${escapeBotHtml(content)}
+          </div>
+        `;
+      } else {
+        msgDiv.innerHTML = `
+          <div class="flex items-start gap-2 max-w-[92%]">
+            <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+              🤖
+            </div>
+            <div class="bg-white border border-slate-200/90 text-slate-800 rounded-2xl rounded-tl-none px-3.5 py-2.5 shadow-sm text-xs leading-relaxed space-y-1.5 break-words">
+              ${formattedContent}
+            </div>
+          </div>
+        `;
+      }
+
+      container.appendChild(msgDiv);
+      scrollAeroBotToBottom();
+    }
+
+    function showAeroBotThinking() {
+      const container = document.getElementById('aerobot-messages');
+      if (!container) return null;
+
+      const indicator = document.createElement('div');
+      indicator.id = 'aerobot-thinking-indicator';
+      indicator.className = 'flex justify-start animate-in fade-in duration-150';
+      indicator.innerHTML = `
+        <div class="flex items-start gap-2 max-w-[85%]">
+          <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+            🤖
+          </div>
+          <div class="bg-white border border-slate-200 text-slate-500 rounded-2xl rounded-tl-none px-3.5 py-2 shadow-sm text-xs flex items-center gap-2">
+            <span>AeroBot sedang meracik jawaban</span>
+            <span class="flex gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce [animation-delay:0.2s]"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-brand-500 animate-bounce [animation-delay:0.4s]"></span>
+            </span>
+          </div>
+        </div>
+      `;
+      container.appendChild(indicator);
+      scrollAeroBotToBottom();
+      return indicator;
+    }
+
+    function removeAeroBotThinking() {
+      const indicator = document.getElementById('aerobot-thinking-indicator');
+      if (indicator) indicator.remove();
+    }
+
+    function scrollAeroBotToBottom() {
+      const container = document.getElementById('aerobot-messages');
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    function escapeBotHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatBotMarkdown(text) {
+      if (!text) return '';
+
+      let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      // Bold **text**
+      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+      // Italic *text* or _text_
+      html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+      html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+      // Inline code `code`
+      html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-100 px-1 py-0.5 rounded text-[11px] font-mono text-indigo-600">$1</code>');
+
+      // Line-by-line formatting for lists & paragraphs
+      const lines = html.split('\n');
+      let output = [];
+      let inList = false;
+
+      for (let line of lines) {
+        const trimmed = line.trim();
+        if (trimmed.startsWith('* ') || trimmed.startsWith('- ') || trimmed.startsWith('• ')) {
+          if (!inList) {
+            output.push('<ul class="list-disc ml-4 space-y-1 my-1">');
+            inList = true;
+          }
+          output.push(`<li>${trimmed.substring(2)}</li>`);
+        } else if (/^\d+\.\s/.test(trimmed)) {
+          if (!inList) {
+            output.push('<ol class="list-decimal ml-4 space-y-1 my-1">');
+            inList = true;
+          }
+          const content = trimmed.replace(/^\d+\.\s/, '');
+          output.push(`<li>${content}</li>`);
+        } else {
+          if (inList) {
+            output.push('</ul>');
+            inList = false;
+          }
+          if (trimmed === '') {
+            output.push('<div class="h-1"></div>');
+          } else {
+            output.push(`<div>${trimmed}</div>`);
+          }
+        }
+      }
+      if (inList) output.push('</ul>');
+
+      return output.join('');
+    }
+
+    function sendQuickPrompt(promptText) {
+      const inputEl = document.getElementById('aerobot-input');
+      if (inputEl) inputEl.value = promptText;
+      handleAeroBotSubmit();
+    }
+
+    async function handleAeroBotSubmit(e) {
+      if (e) e.preventDefault();
+      if (isAeroBotThinking) return;
+
+      const inputEl = document.getElementById('aerobot-input');
+      const userText = (inputEl.value || '').trim();
+      if (!userText) return;
+
+      inputEl.value = '';
+      appendAeroBotMessage('user', userText, false);
+
+      const sendBtn = document.getElementById('aerobot-send-btn');
+      inputEl.disabled = true;
+      if (sendBtn) sendBtn.disabled = true;
+      isAeroBotThinking = true;
+
+      showAeroBotThinking();
+
+      try {
+        const result = await GeminiBot.sendMessage(
+          userText,
+          aerobotChatHistory,
+          currentUser,
+          studentPayments,
+          currentAdminStats
+        );
+        removeAeroBotThinking();
+        const replyText = (result && typeof result === 'object' && result.reply)
+          ? result.reply
+          : (typeof result === 'string' ? result : 'Terima kasih atas pertanyaannya! Ada yang bisa saya bantu lagi? 🧪');
+        appendAeroBotMessage('bot', replyText, true);
+      } catch (err) {
+        removeAeroBotThinking();
+        console.error('Gemini error:', err);
+        appendAeroBotMessage('bot', 'Mohon maaf, terjadi kendala saat menghubungi asisten AI (' + (err.message || 'Koneksi error') + '). Silakan coba tanyakan kembali ya! 🧪', false);
+      } finally {
+        isAeroBotThinking = false;
+        inputEl.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
+        inputEl.focus();
+        scrollAeroBotToBottom();
       }
     }
   </script>
