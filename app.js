@@ -203,7 +203,7 @@ const KasDB = {
     };
   },
 
-  // Ambil pembayaran satu mahasiswa untuk seluruh minggu
+  // Ambil pembayaran satu mahasiswa untuk seluruh minggu (lengkap dengan bukti transfer)
   async getStudentPayments(nim) {
     const { data, error } = await db
       .from('weekly_payments')
@@ -212,7 +212,19 @@ const KasDB = {
       .order('week_number', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    if (!data) return [];
+
+    const proofs = this.getStoredProofs();
+
+    return data.map(p => {
+      const proofInfo = proofs[`${p.nim}_${p.week_number}`] || proofs[p.nim] || null;
+      return {
+        ...p,
+        proof_image: proofInfo ? proofInfo.image : null,
+        proof_note: proofInfo ? proofInfo.note : null,
+        upload_time: proofInfo ? (proofInfo.timestamp || proofInfo.date) : p.payment_date
+      };
+    });
   },
 
   // Ambil semua pembayaran berstatus 'Menunggu Konfirmasi' (untuk Admin)
@@ -418,11 +430,11 @@ const KasDB = {
     return data;
   },
 
-  // Admin tolak pembayaran per ID (menjadi 'Belum Lunas')
+  // Admin tolak pembayaran per ID (menjadi 'Ditolak')
   async rejectPayment(paymentId) {
     const { data, error } = await db
       .from('weekly_payments')
-      .update({ status: 'Belum Lunas' })
+      .update({ status: 'Ditolak' })
       .eq('id', paymentId)
       .select();
 

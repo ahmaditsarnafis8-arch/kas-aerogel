@@ -85,15 +85,20 @@
             </div>
           </div>
         </div>
-        <div class="flex flex-col sm:flex-row md:flex-col gap-3 self-start md:self-center w-full sm:w-auto">
-          <button onclick="openPaymentModal()" class="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-brand-500 to-violet-600 hover:from-brand-600 hover:to-violet-700 text-white font-bold text-sm shadow-lg shadow-brand-500/30 active:scale-[0.98] transition flex items-center justify-center gap-2.5">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        <div class="flex flex-col sm:flex-row md:flex-col gap-2.5 self-start md:self-center w-full sm:w-auto">
+          <button onclick="openPaymentModal()" class="px-5 py-3 rounded-2xl bg-gradient-to-r from-brand-500 to-violet-600 hover:from-brand-600 hover:to-violet-700 text-white font-bold text-sm shadow-lg shadow-brand-500/30 active:scale-[0.98] transition flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             <span>Bayar Kas via QRIS</span>
           </button>
-          <button onclick="loadStudentData()" class="px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            <span>Segarkan Data</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button onclick="switchStudentTab('history')" class="flex-1 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              <span>Riwayat Kas</span>
+            </button>
+            <button onclick="loadStudentData()" title="Segarkan Data" class="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-semibold transition flex items-center justify-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -137,39 +142,130 @@
       </div>
     </div>
 
-    <!-- WEEKLY BREAKDOWN SECTION -->
-    <div class="bg-white rounded-3xl p-5 sm:p-7 border border-slate-200/80 shadow-sm space-y-5">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-        <div>
-          <h2 class="text-lg font-bold text-slate-900 tracking-tight">Rincian Kas Per Minggu (1 - 16)</h2>
-          <p class="text-xs text-slate-500">Pilih minggu yang belum lunas untuk dibayar sekaligus via QRIS</p>
+    <!-- MAIN SECTION WITH TABS -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <!-- TAB NAVIGATION -->
+      <div class="px-5 sm:px-7 pt-5 pb-3 border-b border-slate-100 flex items-center justify-between flex-wrap gap-4 bg-slate-50/50">
+        <div class="flex items-center gap-2 p-1 rounded-xl bg-slate-200/70 text-xs font-bold">
+          <button onclick="switchStudentTab('weeks')" id="student-tab-weeks" class="px-4 py-2 rounded-lg bg-white text-slate-900 shadow-sm transition flex items-center gap-2">
+            <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span>Matriks Minggu Kas</span>
+            <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">16 Minggu</span>
+          </button>
+          <button onclick="switchStudentTab('history')" id="student-tab-history" class="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span>Riwayat Pembayaran</span>
+            <span id="badge-student-history-count" class="px-2 py-0.5 rounded-full bg-indigo-100 text-brand-800 text-[10px] font-extrabold">0 Transaksi</span>
+          </button>
         </div>
 
-        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 text-xs font-semibold overflow-x-auto">
-          <button onclick="filterWeeks('all')" id="tab-all" class="px-3 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition">Semua</button>
-          <button onclick="filterWeeks('unpaid')" id="tab-unpaid" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Belum Lunas</button>
-          <button onclick="filterWeeks('pending')" id="tab-pending" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Menunggu</button>
-          <button onclick="filterWeeks('paid')" id="tab-paid" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Lunas</button>
+        <div class="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-500">
+          <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          <span>Catatan Kas Transparan Mahasiswa</span>
         </div>
       </div>
 
-      <!-- BULK SELECTION ACTION BAR -->
-      <div id="bulk-selection-bar" class="hidden p-3.5 rounded-2xl bg-brand-50 border border-brand-200 flex items-center justify-between">
-        <div class="flex items-center gap-2 text-xs font-semibold text-brand-900">
-          <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span>
-          <span id="bulk-selected-count">0 minggu dipilih</span>
-          <span class="text-slate-400">•</span>
-          <span id="bulk-selected-total" class="font-extrabold text-brand-700">Rp 0</span>
+      <!-- VIEW 1: MATRIKS MINGGU KAS -->
+      <div id="student-view-weeks" class="p-5 sm:p-7 space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-slate-900 tracking-tight">Rincian Kas Per Minggu (1 - 16)</h2>
+            <p class="text-xs text-slate-500">Pilih minggu yang belum lunas untuk dibayar sekaligus via QRIS</p>
+          </div>
+
+          <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 text-xs font-semibold overflow-x-auto">
+            <button onclick="filterWeeks('all')" id="tab-all" class="px-3 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition">Semua</button>
+            <button onclick="filterWeeks('unpaid')" id="tab-unpaid" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Belum Lunas</button>
+            <button onclick="filterWeeks('pending')" id="tab-pending" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Menunggu</button>
+            <button onclick="filterWeeks('paid')" id="tab-paid" class="px-3 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Lunas</button>
+          </div>
         </div>
-        <button onclick="openPaymentModalWithSelection()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition flex items-center gap-1.5">
-          <span>Lanjut Bayar QRIS</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-        </button>
+
+        <!-- BULK SELECTION ACTION BAR -->
+        <div id="bulk-selection-bar" class="hidden p-3.5 rounded-2xl bg-brand-50 border border-brand-200 flex items-center justify-between">
+          <div class="flex items-center gap-2 text-xs font-semibold text-brand-900">
+            <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span>
+            <span id="bulk-selected-count">0 minggu dipilih</span>
+            <span class="text-slate-400">•</span>
+            <span id="bulk-selected-total" class="font-extrabold text-brand-700">Rp 0</span>
+          </div>
+          <button onclick="openPaymentModalWithSelection()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition flex items-center gap-1.5">
+            <span>Lanjut Bayar QRIS</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+
+        <!-- WEEKS GRID -->
+        <div id="weeks-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div class="col-span-full py-12 text-center text-slate-400 text-sm">Memuat data minggu...</div>
+        </div>
       </div>
 
-      <!-- WEEKS GRID -->
-      <div id="weeks-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div class="col-span-full py-12 text-center text-slate-400 text-sm">Memuat data minggu...</div>
+      <!-- VIEW 2: RIWAYAT PEMBAYARAN (TRANSACTION HISTORY) -->
+      <div id="student-view-history" class="p-5 sm:p-7 space-y-6 hidden">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-lg font-bold text-slate-900 tracking-tight">Riwayat Pembayaran Kas Saya</h2>
+              <span class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-brand-700 border border-indigo-200 text-xs font-bold">Transaction History</span>
+            </div>
+            <p class="text-xs text-slate-500 mt-1">Daftar seluruh riwayat pembayaran kas yang pernah Anda ajukan, waktu upload bukti transfer, dan status verifikasi terkini</p>
+          </div>
+
+          <div class="flex items-center gap-2.5">
+            <button onclick="loadStudentData()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              <span>Refresh</span>
+            </button>
+            <button onclick="openPaymentModal()" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>Bayar Kas Baru</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- History Summary KPI Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div class="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-100 flex items-center justify-between">
+            <div>
+              <div class="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Disetujui (Lunas)</div>
+              <div id="hist-summary-approved" class="text-xl sm:text-2xl font-black text-emerald-700 mt-1">Rp 0</div>
+              <div id="hist-summary-approved-weeks" class="text-xs text-emerald-600 mt-0.5">0 Minggu Lunas</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg">✓</div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-100 flex items-center justify-between">
+            <div>
+              <div class="text-[11px] font-bold text-amber-800 uppercase tracking-wider">Menunggu Konfirmasi</div>
+              <div id="hist-summary-pending" class="text-xl sm:text-2xl font-black text-amber-700 mt-1">Rp 0</div>
+              <div id="hist-summary-pending-weeks" class="text-xs text-amber-600 mt-0.5">0 Minggu Menunggu</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-lg">⏳</div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
+            <div>
+              <div class="text-[11px] font-bold text-slate-600 uppercase tracking-wider">Total Catatan Transaksi</div>
+              <div id="hist-summary-total-trx" class="text-xl sm:text-2xl font-black text-slate-900 mt-1">0</div>
+              <div class="text-xs text-slate-500 mt-0.5">Semua riwayat pengajuan</div>
+            </div>
+            <div class="w-10 h-10 rounded-xl bg-slate-200/70 text-slate-700 flex items-center justify-center font-bold text-lg">📋</div>
+          </div>
+        </div>
+
+        <!-- Filter Buttons for History -->
+        <div class="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 text-xs font-semibold overflow-x-auto self-start">
+          <button onclick="filterHistory('all')" id="hist-filter-all" class="px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition">Semua Riwayat</button>
+          <button onclick="filterHistory('paid')" id="hist-filter-paid" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Disetujui (Lunas)</button>
+          <button onclick="filterHistory('pending')" id="hist-filter-pending" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Menunggu Konfirmasi</button>
+          <button onclick="filterHistory('rejected')" id="hist-filter-rejected" class="px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition">Ditolak</button>
+        </div>
+
+        <!-- TRANSACTION CARDS CONTAINER -->
+        <div id="student-history-container" class="space-y-3 sm:space-y-4">
+          <div class="py-16 text-center text-slate-400 text-sm">Memuat riwayat transaksi...</div>
+        </div>
       </div>
     </div>
   </main>
@@ -250,6 +346,26 @@
     </div>
   </div>
 
+  <!-- MODAL: PREVIEW BUKTI TRANSFER SAYA -->
+  <div id="proof-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-in fade-in zoom-in duration-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div>
+          <h3 id="modal-proof-title" class="text-base font-bold text-slate-900">Bukti Transfer Kas</h3>
+          <p id="modal-proof-sub" class="text-xs text-slate-500"></p>
+        </div>
+        <button onclick="closeProofModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold">✕</button>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-slate-50 p-2 text-center">
+        <img id="modal-proof-img" src="" alt="Bukti Transfer" class="max-h-96 mx-auto rounded-xl object-contain">
+      </div>
+      <div id="modal-proof-note-container" class="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-xs text-indigo-900">
+        <strong>Catatan Anda:</strong>
+        <p id="modal-proof-note" class="mt-1 text-slate-700"></p>
+      </div>
+    </div>
+  </div>
+
   <footer class="border-t border-slate-200/80 bg-white/60 py-6 text-center text-xs text-slate-500">
     <div class="max-w-6xl mx-auto px-4 flex items-center justify-center">
       <p>&copy; Made by Itsar. Dikelola oleh Inti Angkatan Kimia 2026.</p>
@@ -261,6 +377,8 @@
     let currentUser = null;
     let studentPayments = [];
     let currentFilter = 'all';
+    let currentStudentTab = 'weeks';
+    let historyFilter = 'all';
     let selectedWeeksForPayment = new Set();
     let proofBase64Image = null;
 
@@ -290,9 +408,36 @@
         studentPayments = await KasDB.getStudentPayments(currentUser.nim);
         renderStats();
         renderWeeks();
+        renderHistory();
       } catch (err) {
         console.error(err);
         Utils.showToast('Gagal memuat rincian kas dari database.', 'error');
+      }
+    }
+
+    function switchStudentTab(tab) {
+      currentStudentTab = tab;
+      const vWeeks = document.getElementById('student-view-weeks');
+      const vHistory = document.getElementById('student-view-history');
+      const bWeeks = document.getElementById('student-tab-weeks');
+      const bHistory = document.getElementById('student-tab-history');
+
+      vWeeks.classList.add('hidden');
+      vHistory.classList.add('hidden');
+
+      const inactiveClass = 'px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center gap-2';
+      const activeClass = 'px-4 py-2 rounded-lg bg-white text-slate-900 shadow-sm transition flex items-center gap-2';
+
+      bWeeks.className = inactiveClass;
+      bHistory.className = inactiveClass;
+
+      if (tab === 'weeks') {
+        vWeeks.classList.remove('hidden');
+        bWeeks.className = activeClass;
+      } else if (tab === 'history') {
+        vHistory.classList.remove('hidden');
+        bHistory.className = activeClass;
+        renderHistory();
       }
     }
 
@@ -342,12 +487,13 @@
 
         if (currentFilter === 'paid' && status !== 'Lunas') continue;
         if (currentFilter === 'pending' && status !== 'Menunggu Konfirmasi') continue;
-        if (currentFilter === 'unpaid' && status !== 'Belum Lunas') continue;
+        if (currentFilter === 'unpaid' && status !== 'Belum Lunas' && status !== 'Ditolak') continue;
 
         renderedCount++;
         const isPaid = status === 'Lunas';
         const isPending = status === 'Menunggu Konfirmasi';
-        const isUnpaid = status === 'Belum Lunas';
+        const isRejected = status === 'Ditolak';
+        const isUnpaid = status === 'Belum Lunas' || isRejected;
 
         let badgeHtml = '';
         let cardBorder = 'border-slate-200/80';
@@ -360,6 +506,10 @@
           badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>Menunggu</span>';
           cardBorder = 'border-amber-200';
           cardBg = 'bg-amber-50/20';
+        } else if (isRejected) {
+          badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">✕ Ditolak</span>';
+          cardBorder = 'border-rose-200';
+          cardBg = 'bg-rose-50/20';
         } else {
           badgeHtml = '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Belum Lunas</span>';
           cardBorder = 'border-rose-200/70';
@@ -377,8 +527,8 @@
             </div>
             <div class="text-lg font-extrabold text-slate-900 mt-1">Rp 5.000</div>
             <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1">
-              <span>Tanggal:</span>
-              <span class="font-medium text-slate-700">${p && p.payment_date ? Utils.formatDate(p.payment_date) : '-'}</span>
+              <span>Waktu:</span>
+              <span class="font-medium text-slate-700">${p && (p.upload_time || p.payment_date) ? Utils.formatDate(p.upload_time || p.payment_date) : '-'}</span>
             </div>
           </div>
 
@@ -388,7 +538,7 @@
                 <input type="checkbox" value="${w}" ${isChecked ? 'checked' : ''} onchange="toggleWeekSelection(${w}, this.checked)" class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500 border-slate-300">
                 <span>Pilih Bayar</span>
               </label>
-              <button onclick="paySingleWeek(${w})" class="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline">Bayar Ini</button>
+              <button onclick="paySingleWeek(${w})" class="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline">${isRejected ? 'Bayar Ulang' : 'Bayar Ini'}</button>
             ` : isPending ? `
               <span class="text-[11px] font-medium text-amber-700">Diverifikasi Sekretaris</span>
               <span class="text-xs">⏳</span>
@@ -437,6 +587,217 @@
       }
     }
 
+    // ==========================================
+    // RIWAYAT PEMBAYARAN MAHASISWA (TRANSACTION HISTORY)
+    // ==========================================
+    function filterHistory(type) {
+      historyFilter = type;
+      ['all', 'paid', 'pending', 'rejected'].forEach(t => {
+        const el = document.getElementById('hist-filter-' + t);
+        if (el) {
+          if (t === type) el.className = 'px-3.5 py-1.5 rounded-lg bg-white text-slate-900 shadow-sm transition';
+          else el.className = 'px-3.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 transition';
+        }
+      });
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('student-history-container');
+      if (!container) return;
+
+      // Filter submissions: only include weeks that have been submitted / paid / pending / rejected
+      const submittedPayments = studentPayments.filter(p => {
+        return p.status === 'Lunas' || p.status === 'Menunggu Konfirmasi' || p.status === 'Ditolak';
+      });
+
+      // Update KPI metrics
+      const approvedList = submittedPayments.filter(p => p.status === 'Lunas');
+      const pendingList = submittedPayments.filter(p => p.status === 'Menunggu Konfirmasi');
+      const rejectedList = submittedPayments.filter(p => p.status === 'Ditolak');
+
+      const approvedTotal = approvedList.reduce((s, p) => s + (p.amount || CONFIG.WEEKLY_DUES), 0);
+      const pendingTotal = pendingList.reduce((s, p) => s + (p.amount || CONFIG.WEEKLY_DUES), 0);
+
+      const elApp = document.getElementById('hist-summary-approved');
+      const elAppWeeks = document.getElementById('hist-summary-approved-weeks');
+      const elPen = document.getElementById('hist-summary-pending');
+      const elPenWeeks = document.getElementById('hist-summary-pending-weeks');
+      const elTot = document.getElementById('hist-summary-total-trx');
+      const badgeTab = document.getElementById('badge-student-history-count');
+
+      if (elApp) elApp.textContent = Utils.formatRupiah(approvedTotal);
+      if (elAppWeeks) elAppWeeks.textContent = `${approvedList.length} Minggu Lunas`;
+      if (elPen) elPen.textContent = Utils.formatRupiah(pendingTotal);
+      if (elPenWeeks) elPenWeeks.textContent = `${pendingList.length} Minggu Menunggu`;
+      if (elTot) elTot.textContent = submittedPayments.length;
+      if (badgeTab) badgeTab.textContent = `${submittedPayments.length} Transaksi`;
+
+      // Filter by historyFilter
+      let filtered = submittedPayments.filter(p => {
+        if (historyFilter === 'paid') return p.status === 'Lunas';
+        if (historyFilter === 'pending') return p.status === 'Menunggu Konfirmasi';
+        if (historyFilter === 'rejected') return p.status === 'Ditolak';
+        return true;
+      });
+
+      // Sort newest first
+      filtered.sort((a, b) => {
+        const dateA = new Date(a.upload_time || a.payment_date || 0).getTime();
+        const dateB = new Date(b.upload_time || b.payment_date || 0).getTime();
+        return dateB - dateA;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="py-16 text-center text-slate-400 space-y-3 bg-slate-50/50 rounded-2xl border border-slate-200/80">
+            <div class="text-4xl">🧾</div>
+            <div class="text-base font-semibold text-slate-800">Belum Ada Riwayat Pembayaran</div>
+            <p class="text-xs text-slate-500 max-w-sm mx-auto">
+              ${historyFilter === 'all' 
+                ? 'Anda belum pernah mengajukan pembayaran kas. Silakan pilih minggu kas dan lakukan pembayaran via QRIS.' 
+                : 'Tidak ada catatan pembayaran pada kategori filter ini.'}
+            </p>
+            ${historyFilter === 'all' ? `
+              <button onclick="openPaymentModal()" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-md shadow-brand-500/20 transition">
+                <span>Bayar Kas Sekarang</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
+            ` : ''}
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      filtered.forEach(item => {
+        const isPaid = item.status === 'Lunas';
+        const isPending = item.status === 'Menunggu Konfirmasi';
+        const isRejected = item.status === 'Ditolak';
+
+        let badgeHtml = '';
+        let cardBg = 'bg-white';
+        let cardBorder = 'border-slate-200';
+        let statusDesc = '';
+
+        if (isPaid) {
+          badgeHtml = `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              ✓ Disetujui (Lunas)
+            </span>
+          `;
+          cardBorder = 'border-slate-200 hover:border-emerald-200';
+          statusDesc = 'Kas telah diverifikasi dan disetujui oleh Sekretaris Angkatan.';
+        } else if (isPending) {
+          badgeHtml = `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+              ⏳ Menunggu Konfirmasi
+            </span>
+          `;
+          cardBorder = 'border-amber-200 bg-amber-50/10 hover:border-amber-300';
+          statusDesc = 'Bukti pembayaran telah diterima dan sedang menunggu persetujuan Sekretaris.';
+        } else {
+          badgeHtml = `
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+              ✕ Ditolak
+            </span>
+          `;
+          cardBorder = 'border-rose-200 bg-rose-50/10 hover:border-rose-300';
+          statusDesc = 'Pengajuan ditolak oleh Sekretaris. Silakan bayar ulang dengan bukti transfer yang valid.';
+        }
+
+        const formattedTime = Utils.formatDate(item.upload_time || item.payment_date);
+        const hasProof = !!(item.proof_image || item.proof_note);
+
+        const card = document.createElement('div');
+        card.className = `p-4 sm:p-5 rounded-2xl border ${cardBorder} ${cardBg} shadow-sm hover:shadow-md transition flex flex-col md:flex-row md:items-center justify-between gap-4`;
+
+        card.innerHTML = `
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-2xl ${isPaid ? 'bg-emerald-100 text-emerald-800' : isPending ? 'bg-amber-100 text-amber-800' : 'bg-rose-100 text-rose-800'} flex-shrink-0 flex items-center justify-center font-black text-sm">
+              W${item.week_number}
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-extrabold text-slate-900 text-sm sm:text-base">Minggu ke-${item.week_number}</span>
+                <span class="text-slate-300">•</span>
+                <span class="font-extrabold text-brand-600 text-sm sm:text-base">${Utils.formatRupiah(item.amount || CONFIG.WEEKLY_DUES)}</span>
+              </div>
+
+              <div class="text-xs text-slate-500 flex items-center gap-2 flex-wrap">
+                <span class="flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span>Waktu Unggah:</span>
+                  <strong class="text-slate-700 font-semibold">${formattedTime}</strong>
+                </span>
+              </div>
+
+              <div class="text-xs text-slate-500">
+                <span>Status:</span> <span class="font-medium ${isPaid ? 'text-emerald-700' : isPending ? 'text-amber-700' : 'text-rose-700'}">${statusDesc}</span>
+              </div>
+
+              ${item.proof_note ? `
+                <div class="text-xs text-indigo-900 bg-indigo-50/80 px-3 py-1.5 rounded-xl border border-indigo-100 inline-block mt-1">
+                  <strong>Catatan Anda:</strong> "${item.proof_note}"
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5 self-start md:self-center">
+            ${badgeHtml}
+
+            ${hasProof ? `
+              <button onclick="previewStudentProof(${item.week_number})" class="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5 shadow-2xs">
+                <svg class="w-3.5 h-3.5 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                <span>Lihat Bukti</span>
+              </button>
+            ` : ''}
+
+            ${isRejected ? `
+              <button onclick="paySingleWeek(${item.week_number})" class="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold shadow-sm transition flex items-center gap-1">
+                <span>Bayar Ulang</span>
+              </button>
+            ` : ''}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function previewStudentProof(weekNum) {
+      const item = studentPayments.find(p => p.week_number === weekNum) || {};
+      const proofs = KasDB.getStoredProofs();
+      const p = proofs[`${currentUser.nim}_${weekNum}`] || proofs[currentUser.nim] || {};
+
+      document.getElementById('modal-proof-title').textContent = `Bukti Transfer: Minggu ke-${weekNum}`;
+      document.getElementById('modal-proof-sub').textContent = `NIM: ${currentUser.nim} • Nominal: ${Utils.formatRupiah(item.amount || CONFIG.WEEKLY_DUES)} • Waktu: ${Utils.formatDate(item.upload_time || item.payment_date || p.date)}`;
+
+      const img = document.getElementById('modal-proof-img');
+      if (item.proof_image || p.image) {
+        img.src = item.proof_image || p.image;
+        img.classList.remove('hidden');
+      } else {
+        img.classList.add('hidden');
+      }
+
+      const noteBox = document.getElementById('modal-proof-note-container');
+      const noteText = document.getElementById('modal-proof-note');
+      const noteContent = item.proof_note || p.note || 'Tidak ada catatan.';
+      noteBox.classList.remove('hidden');
+      noteText.textContent = noteContent;
+
+      document.getElementById('proof-modal').classList.remove('hidden');
+      document.getElementById('proof-modal').classList.add('flex');
+    }
+
+    function closeProofModal() {
+      document.getElementById('proof-modal').classList.add('hidden');
+      document.getElementById('proof-modal').classList.remove('flex');
+    }
+
     function paySingleWeek(w) {
       selectedWeeksForPayment.clear();
       selectedWeeksForPayment.add(w);
@@ -459,7 +820,7 @@
       if (selectedWeeksForPayment.size === 0) {
         for (let w = 1; w <= CONFIG.TOTAL_WEEKS; w++) {
           const p = paymentMap[w];
-          if (!p || p.status === 'Belum Lunas') {
+          if (!p || p.status === 'Belum Lunas' || p.status === 'Ditolak') {
             selectedWeeksForPayment.add(w);
             break;
           }
@@ -556,6 +917,8 @@
         clearProofPreview();
         document.getElementById('proof-note-input').value = '';
         await loadStudentData();
+        // Switch to history tab so student directly sees their new submission!
+        switchStudentTab('history');
       } catch (err) {
         console.error(err);
         Utils.showToast(err.message || 'Gagal mengirim pembayaran. Coba lagi.', 'error');
