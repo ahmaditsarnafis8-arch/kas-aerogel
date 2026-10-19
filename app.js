@@ -7,6 +7,7 @@ const CONFIG = {
   SUPABASE_URL: 'https://mlnizfwyssooiuuvbeqz.supabase.co',
   SUPABASE_ANON_KEY: 'sb_publishable_YNzxL5Hv8_6CM0W_KueIYw_fv7IqQcN',
   ADMIN_NIM: '261810309999',
+  ADMIN_PIN: '123456',
   WEEKLY_DUES: 5000,
   TOTAL_WEEKS: 16,
   SESSION_KEY: 'kas_aerogel_user',
@@ -53,14 +54,33 @@ const Auth = {
     window.location.href = 'index.html';
   },
 
-  async loginWithNIM(nim) {
+  async loginWithNIM(nim, pin = null) {
     if (!nim || !nim.trim()) {
       return { success: false, message: 'Masukkan NIM Anda terlebih dahulu.' };
     }
     const cleanNim = nim.trim();
 
-    // 1. Bypass instan untuk Admin Bendahara
+    // 1. Verifikasi Khusus Admin / Bendahara (NIM: 261810309999)
     if (cleanNim === CONFIG.ADMIN_NIM) {
+      if (!pin || !String(pin).trim()) {
+        return {
+          success: false,
+          requirePin: true,
+          isAdmin: true,
+          message: 'Akun Bendahara terdeteksi. Silakan masukkan PIN khusus admin untuk melanjutkan.'
+        };
+      }
+
+      if (String(pin).trim() !== String(CONFIG.ADMIN_PIN)) {
+        return {
+          success: false,
+          requirePin: true,
+          isAdmin: true,
+          invalidPin: true,
+          message: 'PIN Admin salah! Silakan coba lagi.'
+        };
+      }
+
       const adminData = {
         nim: CONFIG.ADMIN_NIM,
         nama: 'Admin Bendahara Kimia 2026',
@@ -71,42 +91,53 @@ const Auth = {
       return { success: true, user: adminData, isAdmin: true };
     }
 
+    // 2. Verifikasi Mahasiswa Biasa ke tabel 'students' di Supabase (Tanpa Password)
     try {
-      const { data, error } = await db
-        .from('students')
-        .select('*')
-        .eq('nim', cleanNim)
-        .maybeSingle();
+      if (db) {
+        const { data, error } = await db
+          .from('students')
+          .select('*')
+          .eq('nim', cleanNim)
+          .maybeSingle();
 
-      if (data) {
-        this.setUser(data);
-        return {
-          success: true,
-          user: data,
-          isAdmin: data.role === 'admin' || cleanNim === CONFIG.ADMIN_NIM
-        };
+        if (error) {
+          console.warn('[KasAerogel] Error saat query data mahasiswa:', error.message);
+        }
+
+        if (data) {
+          this.setUser(data);
+          return {
+            success: true,
+            user: data,
+            isAdmin: data.role === 'admin' || cleanNim === CONFIG.ADMIN_NIM
+          };
+        }
       }
 
-      // Fallback jika tabel students belum bisa dibaca karena RLS
-      const fallbackUser = {
-        nim: cleanNim,
-        nama: 'Mahasiswa ' + cleanNim,
-        kelas: 'G',
-        role: 'student'
+      // Fallback ke data known students jika Supabase lambat/offline
+      if (KasDB.KNOWN_STUDENTS && KasDB.KNOWN_STUDENTS[cleanNim]) {
+        const known = KasDB.KNOWN_STUDENTS[cleanNim];
+        const studentData = {
+          nim: cleanNim,
+          nama: known.nama,
+          kelas: known.kelas,
+          role: 'student'
+        };
+        this.setUser(studentData);
+        return { success: true, user: studentData, isAdmin: false };
+      }
+
+      // Jika tidak terdaftar di database
+      return {
+        success: false,
+        message: `NIM ${cleanNim} tidak terdaftar di pangkalan data Mahasiswa Kimia 2026. Harap periksa kembali NIM Anda.`
       };
-      this.setUser(fallbackUser);
-      return { success: true, user: fallbackUser, isAdmin: false };
     } catch (err) {
       console.error('Fatal login error:', err);
-      // Fallback agar tetap bisa masuk
-      const fallbackUser = {
-        nim: cleanNim,
-        nama: 'Mahasiswa ' + cleanNim,
-        kelas: 'G',
-        role: 'student'
+      return {
+        success: false,
+        message: 'Gagal memvalidasi NIM ke database server. Silakan periksa koneksi internet Anda.'
       };
-      this.setUser(fallbackUser);
-      return { success: true, user: fallbackUser, isAdmin: false };
     }
   },
 

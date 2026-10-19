@@ -144,7 +144,43 @@
                 </svg>
               </div>
             </div>
-            <p class="text-[11px] text-slate-500 mt-1.5">NIM Anda terhubung otomatis dengan data kelas dan rekapan kas.</p>
+            <p id="nim-hint-text" class="text-[11px] text-slate-500 mt-1.5">NIM Anda terhubung otomatis dengan data kelas dan rekapan kas.</p>
+          </div>
+
+          <!-- FIELD TAMBAHAN: PIN KHUSUS ADMIN (MUNCUL OTOMATIS JIKA NIM 261810309999) -->
+          <div id="admin-pin-container" class="hidden p-3.5 rounded-2xl bg-amber-50/90 border border-amber-200/90 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div class="flex items-center justify-between">
+              <label for="pin-input" class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span>PIN Khusus Bendahara / Admin</span>
+              </label>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-200/80 text-amber-800">
+                Wajib
+              </span>
+            </div>
+            <div class="relative">
+              <input 
+                type="password" 
+                id="pin-input" 
+                inputmode="numeric" 
+                maxlength="6" 
+                placeholder="Masukkan 6 digit PIN admin" 
+                class="w-full px-4 py-3 pl-11 pr-11 rounded-xl border border-amber-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white text-slate-900 text-sm font-mono tracking-widest transition-all"
+              >
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-amber-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+              </div>
+              <button 
+                type="button" 
+                onclick="togglePinVisibility()" 
+                class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-amber-600 hover:text-amber-800 transition"
+                title="Lihat / Sembunyikan PIN">
+                <svg id="eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+              </button>
+            </div>
+            <p class="text-[11px] text-amber-800 flex items-center gap-1">
+              <span>🛡️ Mode Bendahara Angkatan aktif. Masukkan PIN keamanan untuk masuk.</span>
+            </p>
           </div>
 
           <button 
@@ -166,6 +202,66 @@
       </div>
     </div>
   </main>
+
+  <!-- MODAL: VERIFIKASI PIN ADMIN BENDAHARA -->
+  <div id="admin-pin-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-7 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in duration-200">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <img src="logo.jpg" alt="Logo Aerogel" class="w-10 h-10 rounded-xl object-contain bg-white shadow-sm border border-slate-200 p-0.5">
+          <div>
+            <h3 class="text-base font-bold text-slate-900 leading-tight">PIN Khusus Admin</h3>
+            <p class="text-[11px] text-amber-700 font-medium">Bendahara Angkatan Kimia 2026</p>
+          </div>
+        </div>
+        <button type="button" onclick="closeAdminPinModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-sm">✕</button>
+      </div>
+
+      <!-- Alert Error in Modal -->
+      <div id="modal-pin-alert" class="hidden p-3 rounded-xl text-xs font-semibold border bg-rose-50 text-rose-700 border-rose-200 flex items-center gap-2">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span id="modal-pin-alert-text">PIN salah!</span>
+      </div>
+
+      <div class="space-y-2">
+        <label for="modal-pin-input" class="block text-xs font-bold uppercase tracking-wider text-slate-700">
+          Masukkan PIN Keamanan Admin
+        </label>
+        <div class="relative">
+          <input 
+            type="password" 
+            id="modal-pin-input" 
+            inputmode="numeric" 
+            maxlength="6" 
+            placeholder="••••••" 
+            class="w-full px-4 py-3 pl-11 pr-11 rounded-xl border border-slate-300 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-slate-900 text-center text-xl font-mono tracking-[0.3em] font-bold transition-all"
+            onkeydown="if(event.key === 'Enter') submitAdminPinModal()"
+          >
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-amber-500">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <button 
+            type="button" 
+            onclick="toggleModalPinVisibility()" 
+            class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 transition"
+            title="Lihat / Sembunyikan PIN">
+            <svg id="modal-eye-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          </button>
+        </div>
+        <p class="text-[11px] text-slate-500 text-center">NIM: <strong class="text-slate-800 font-mono">261810309999</strong> (Akses Panel Bendahara)</p>
+      </div>
+
+      <div class="flex items-center gap-2.5 pt-2">
+        <button type="button" onclick="closeAdminPinModal()" class="w-1/2 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold transition">
+          Batal
+        </button>
+        <button type="button" onclick="submitAdminPinModal()" id="btn-modal-pin-submit" class="w-1/2 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-indigo-600 hover:from-amber-700 hover:to-indigo-700 text-white text-xs font-bold shadow-md shadow-amber-500/20 transition flex items-center justify-center gap-1.5">
+          <span id="btn-modal-pin-text">Masuk Admin</span>
+          <svg id="btn-modal-pin-spinner" class="hidden w-3.5 h-3.5 animate-spin text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- FOOTER -->
   <footer class="border-t border-slate-200/80 bg-white/60 py-6 text-center text-xs text-slate-500">
@@ -198,12 +294,118 @@
 
     const form = document.getElementById('login-form');
     const nimInput = document.getElementById('nim-input');
+    const pinInput = document.getElementById('pin-input');
+    const modalPinInput = document.getElementById('modal-pin-input');
+    const adminPinContainer = document.getElementById('admin-pin-container');
+    const nimHintText = document.getElementById('nim-hint-text');
     const btnLogin = document.getElementById('btn-login');
     const btnText = document.getElementById('btn-login-text');
     const btnSpinner = document.getElementById('btn-login-spinner');
     const btnArrow = document.getElementById('btn-login-arrow');
     const alertBox = document.getElementById('login-alert');
     const alertText = document.getElementById('login-alert-text');
+
+    // Deteksi otomatis saat mengetik NIM
+    nimInput.addEventListener('input', handleNimChange);
+    nimInput.addEventListener('change', handleNimChange);
+
+    function handleNimChange() {
+      const nim = nimInput.value.trim();
+      if (nim === CONFIG.ADMIN_NIM) {
+        adminPinContainer.classList.remove('hidden');
+        if (nimHintText) {
+          nimHintText.textContent = '🛡️ NIM Bendahara Angkatan terdeteksi. Silakan masukkan PIN khusus admin.';
+          nimHintText.className = 'text-[11px] text-amber-700 font-medium mt-1.5';
+        }
+        btnText.textContent = 'Verifikasi & Masuk Admin';
+      } else {
+        adminPinContainer.classList.add('hidden');
+        if (nimHintText) {
+          nimHintText.textContent = 'NIM Anda terhubung otomatis dengan data kelas dan rekapan kas.';
+          nimHintText.className = 'text-[11px] text-slate-500 mt-1.5';
+        }
+        btnText.textContent = 'Masuk ke Dashboard';
+      }
+    }
+
+    function togglePinVisibility() {
+      if (pinInput.type === 'password') {
+        pinInput.type = 'text';
+      } else {
+        pinInput.type = 'password';
+      }
+    }
+
+    function toggleModalPinVisibility() {
+      if (modalPinInput.type === 'password') {
+        modalPinInput.type = 'text';
+      } else {
+        modalPinInput.type = 'password';
+      }
+    }
+
+    function openAdminPinModal() {
+      const modal = document.getElementById('admin-pin-modal');
+      const modalAlert = document.getElementById('modal-pin-alert');
+      if (modalAlert) modalAlert.classList.add('hidden');
+      modalPinInput.value = pinInput.value || '';
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      setTimeout(() => {
+        modalPinInput.focus();
+        modalPinInput.select();
+      }, 100);
+    }
+
+    function closeAdminPinModal() {
+      const modal = document.getElementById('admin-pin-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    async function submitAdminPinModal() {
+      const pin = modalPinInput.value.trim();
+      const modalAlert = document.getElementById('modal-pin-alert');
+      const modalAlertText = document.getElementById('modal-pin-alert-text');
+      const btnModal = document.getElementById('btn-modal-pin-submit');
+      const btnModalText = document.getElementById('btn-modal-pin-text');
+      const btnModalSpinner = document.getElementById('btn-modal-pin-spinner');
+
+      if (!pin) {
+        modalAlert.classList.remove('hidden');
+        modalAlertText.textContent = 'Masukkan 6 digit PIN admin terlebih dahulu.';
+        modalPinInput.focus();
+        return;
+      }
+
+      btnModal.disabled = true;
+      btnModalSpinner.classList.remove('hidden');
+      btnModalText.textContent = 'Verifikasi...';
+      modalAlert.classList.add('hidden');
+
+      const result = await Auth.loginWithNIM(CONFIG.ADMIN_NIM, pin);
+
+      if (!result.success) {
+        btnModal.disabled = false;
+        btnModalSpinner.classList.add('hidden');
+        btnModalText.textContent = 'Masuk Admin';
+        modalAlert.classList.remove('hidden');
+        modalAlertText.textContent = result.message || 'PIN Admin salah! Silakan coba lagi.';
+        modalPinInput.focus();
+        return;
+      }
+
+      // Sinkronkan ke input inline
+      pinInput.value = pin;
+      btnModalText.textContent = 'Berhasil!';
+      modalAlert.classList.remove('hidden', 'bg-rose-50', 'text-rose-700', 'border-rose-200');
+      modalAlert.classList.add('bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
+      modalAlertText.textContent = 'PIN Valid! Mengalihkan ke Panel Bendahara...';
+
+      setTimeout(() => {
+        window.location.href = 'admin-dashboard.html';
+      }, 500);
+    }
 
     function showAlert(msg, isError = true) {
       alertBox.classList.remove('hidden', 'bg-rose-50', 'text-rose-700', 'border-rose-200', 'bg-emerald-50', 'text-emerald-700', 'border-emerald-200');
@@ -220,11 +422,49 @@
       const nim = nimInput.value.trim();
       if (!nim) return;
 
-      // Loading state
+      // KASUS 1: ADMIN BENDAHARA (NIM: 261810309999)
+      if (nim === CONFIG.ADMIN_NIM) {
+        const pin = pinInput.value.trim();
+        // Jika PIN belum diisi, buka modal PIN interaktif
+        if (!pin) {
+          adminPinContainer.classList.remove('hidden');
+          openAdminPinModal();
+          return;
+        }
+
+        // Lakukan verifikasi PIN
+        btnLogin.disabled = true;
+        btnSpinner.classList.remove('hidden');
+        btnArrow.classList.add('hidden');
+        btnText.textContent = 'Memverifikasi PIN...';
+        alertBox.classList.add('hidden');
+
+        const result = await Auth.loginWithNIM(nim, pin);
+
+        if (!result.success) {
+          btnLogin.disabled = false;
+          btnSpinner.classList.add('hidden');
+          btnArrow.classList.remove('hidden');
+          btnText.textContent = 'Verifikasi & Masuk Admin';
+          showAlert(result.message, true);
+          pinInput.focus();
+          return;
+        }
+
+        showAlert('PIN Admin Valid! Mengalihkan ke Panel Bendahara...', false);
+        btnText.textContent = 'Berhasil Masuk Admin!';
+
+        setTimeout(() => {
+          window.location.href = 'admin-dashboard.html';
+        }, 600);
+        return;
+      }
+
+      // KASUS 2: MAHASISWA BIASA (VALIDASI KE TABEL STUDENTS SUPABASE TANPA PASSWORD)
       btnLogin.disabled = true;
       btnSpinner.classList.remove('hidden');
       btnArrow.classList.add('hidden');
-      btnText.textContent = 'Memverifikasi...';
+      btnText.textContent = 'Memvalidasi NIM...';
       alertBox.classList.add('hidden');
 
       const result = await Auth.loginWithNIM(nim);
@@ -238,17 +478,14 @@
         return;
       }
 
-      // Success
-      showAlert(`Selamat datang, ${result.user.nama || 'Mahasiswa'}! Mengalihkan...`, false);
+      // Berhasil
+      const studentName = result.user?.nama || 'Mahasiswa';
+      showAlert(`Selamat datang, ${studentName}! Mengalihkan ke Dashboard...`, false);
       btnText.textContent = 'Berhasil Masuk!';
 
       setTimeout(() => {
-        if (result.isAdmin) {
-          window.location.href = 'admin-dashboard.html';
-        } else {
-          window.location.href = 'student-dashboard.html';
-        }
-      }, 700);
+        window.location.href = 'student-dashboard.html';
+      }, 600);
     });
   </script>
 </body>
